@@ -146,8 +146,8 @@
       }
 
       .seller-marker {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         background: #74c843;
         border: 3px solid #0b1220;
@@ -155,10 +155,36 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        position: relative;
       }
       .seller-marker i {
         color: #0b1220;
         font-size: 14px;
+      }
+      .seller-marker::before {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px solid rgba(116, 200, 67, 0.55);
+        animation: coleta-pulse 1.8s ease-out infinite;
+      }
+      @keyframes coleta-pulse {
+        0% {
+          transform: scale(0.85);
+          opacity: 0.9;
+        }
+        100% {
+          transform: scale(1.45);
+          opacity: 0;
+        }
+      }
+
+      .leaflet-popup-pane {
+        z-index: 1200 !important;
+      }
+      .carrier-popup-wrap {
+        font-family: Inter, sans-serif;
       }
 
       .marker-cluster-custom {
@@ -190,16 +216,46 @@
         overflow: hidden;
       }
       .leaflet-popup-content {
-        margin: 0;
+        margin: 0 !important;
         width: 260px !important;
+        line-height: 1.35;
       }
       .leaflet-popup-tip {
         background: #171e2e;
       }
       .leaflet-container a.leaflet-popup-close-button {
-        color: #9ca3af;
-        top: 8px;
-        right: 8px;
+        color: #9ca3af !important;
+        top: 10px !important;
+        right: 10px !important;
+        font-size: 16px !important;
+        z-index: 2;
+      }
+      .carrier-leaflet-popup .leaflet-popup-content-wrapper {
+        background: transparent;
+        box-shadow: none;
+      }
+      .carrier-div-icon,
+      .seller-div-icon {
+        background: transparent !important;
+        border: 0 !important;
+      }
+      #map {
+        z-index: 1;
+      }
+      .coleta-tooltip {
+        background: #121826 !important;
+        border: 1px solid #74c843 !important;
+        color: #74c843 !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: 6px !important;
+        padding: 3px 8px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      }
+      .coleta-tooltip::before {
+        border-bottom-color: #74c843 !important;
       }
 
       .carrier-card {
@@ -808,7 +864,10 @@
       let mapInstance = null;
       let clusterGroup = null;
       let sellerMarker = null;
+      let routeLine = null;
+      let routeFetchToken = 0;
       let markersById = {};
+      let carriersById = {};
       let selectedId = null;
       let hasSearchedCep = false;
       let lastCepHadCoverage = true;
@@ -951,6 +1010,7 @@
                 Digite um CEP para ver as transportadoras próximas.
               </p>
             </div>`;
+          clearRoute();
           syncMapMarkers(allCarriersForMap());
           return;
         }
@@ -965,6 +1025,7 @@
                 Não temos um parceiro nesta região, em breve retornaremos o contato contigo.
               </p>
             </div>`;
+          clearRoute();
           syncMapMarkers([]);
           return;
         }
@@ -977,6 +1038,7 @@
                 Nenhuma transportadora encontrada com esses filtros.
               </p>
             </div>`;
+          clearRoute();
           syncMapMarkers([]);
           return;
         }
@@ -1007,56 +1069,210 @@
       }
 
       function popupHtml(c) {
+        const safeName = String(c.name).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
         return `
-          <div class="p-3">
-            <div class="flex items-center gap-2 mb-3 pr-4">
-              <div class="w-8 h-8 rounded-lg bg-[#121826] border border-gray-700 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-box text-seller-green text-xs"></i>
+          <div class="carrier-popup-wrap" style="width:260px;background:#171E2E;color:#fff;">
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 36px 10px 14px;border-bottom:1px solid #2a3347;">
+              <div style="width:36px;height:36px;border-radius:8px;background:#121826;border:1px solid #374151;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-box" style="color:#74C843;font-size:13px;"></i>
               </div>
-              <strong class="text-white text-xs leading-tight">${c.name}</strong>
+              <strong style="font-size:12px;line-height:1.25;letter-spacing:0.02em;">${c.name}</strong>
             </div>
-            <div class="space-y-2 text-[11px] text-gray-300 mb-3">
-              <div class="flex gap-2">
-                <i class="fa-solid fa-location-dot text-seller-green mt-0.5"></i>
+            <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:11px;color:#d1d5db;">
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <i class="fa-solid fa-location-dot" style="color:#74C843;margin-top:2px;"></i>
                 <span>${c.address}</span>
               </div>
-              <div class="flex gap-2 items-center">
-                <i class="fa-brands fa-whatsapp text-seller-green"></i>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
                 <span>${c.phone}</span>
               </div>
-              <div class="flex gap-2 items-center">
-                <i class="fa-regular fa-envelope text-seller-green"></i>
-                <span class="break-all">${c.email}</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <i class="fa-regular fa-envelope" style="color:#74C843;"></i>
+                <span style="word-break:break-all;">${c.email}</span>
               </div>
             </div>
-            <button
-              onclick="contratarAgora('${c.name.replace(/'/g, "\\'")}')"
-              class="w-full bg-[#74C843] hover:bg-[#5EB22F] text-white font-semibold text-xs py-2.5 rounded-lg transition-colors"
-            >
-              Contratar agora!
-            </button>
+            <div style="padding:0 14px 14px;">
+              <button
+                type="button"
+                onclick="contratarAgora('${safeName}')"
+                style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;"
+              >
+                Contratar agora!
+              </button>
+            </div>
           </div>`;
       }
 
       // ============================================================
       // MAP
       // ============================================================
-      function carrierIcon() {
+      function carrierIcon(active) {
+        const border = active ? "#fff" : "#74c843";
+        const scale = active ? "transform:scale(1.08);" : "";
         return L.divIcon({
-          className: "",
-          html: `<div class="carrier-marker"><i class="fa-solid fa-box"></i></div>`,
+          className: "carrier-div-icon",
+          html: `<div class="carrier-marker" style="border-color:${border};${scale}"><i class="fa-solid fa-truck"></i></div>`,
           iconSize: [34, 34],
           iconAnchor: [17, 17],
-          popupAnchor: [0, -16],
+          popupAnchor: [0, -18],
         });
       }
 
       function sellerIcon() {
         return L.divIcon({
-          className: "",
+          className: "seller-div-icon",
           html: `<div class="seller-marker"><i class="fa-solid fa-box"></i></div>`,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19],
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+        });
+      }
+
+      function clearRoute() {
+        routeFetchToken += 1;
+        if (routeLine && mapInstance) {
+          mapInstance.removeLayer(routeLine);
+          routeLine = null;
+        }
+      }
+
+      function setRouteLatLngs(latlngs) {
+        if (!mapInstance) return;
+        if (routeLine) {
+          routeLine.setLatLngs(latlngs);
+          return;
+        }
+        routeLine = L.polyline(latlngs, {
+          color: "#74C843",
+          weight: 4,
+          opacity: 0.9,
+          dashArray: "10 8",
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(mapInstance);
+      }
+
+      function curvedFallback(from, to) {
+        const points = [];
+        const midLat = (from[0] + to[0]) / 2;
+        const midLng = (from[1] + to[1]) / 2;
+        const dx = to[1] - from[1];
+        const dy = to[0] - from[0];
+        const ctrl = [midLat + dx * 0.12, midLng - dy * 0.12];
+        for (let i = 0; i <= 24; i++) {
+          const t = i / 24;
+          const u = 1 - t;
+          points.push([
+            u * u * from[0] + 2 * u * t * ctrl[0] + t * t * to[0],
+            u * u * from[1] + 2 * u * t * ctrl[1] + t * t * to[1],
+          ]);
+        }
+        return points;
+      }
+
+      async function drawRouteToCarrier(carrier) {
+        if (!mapInstance || !carrier || !hasSearchedCep) {
+          clearRoute();
+          return;
+        }
+
+        const from = sellerCoords;
+        const to = [carrier.lat, carrier.lng];
+        const token = ++routeFetchToken;
+
+        setRouteLatLngs([from, to]);
+
+        try {
+          const url =
+            `https://router.project-osrm.org/route/v1/driving/` +
+            `${from[1]},${from[0]};${to[1]},${to[0]}` +
+            `?overview=full&geometries=geojson`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("osrm");
+          const data = await res.json();
+          if (token !== routeFetchToken) return;
+          const coords = data?.routes?.[0]?.geometry?.coordinates;
+          if (coords?.length) {
+            setRouteLatLngs(coords.map(([lng, lat]) => [lat, lng]));
+            return;
+          }
+        } catch (_) {
+          /* fallback below */
+        }
+
+        if (token !== routeFetchToken) return;
+        setRouteLatLngs(curvedFallback(from, to));
+      }
+
+      function updateColetaMarker() {
+        if (!mapInstance) return;
+
+        if (!hasSearchedCep) {
+          if (sellerMarker) {
+            mapInstance.removeLayer(sellerMarker);
+            sellerMarker = null;
+          }
+          return;
+        }
+
+        if (!sellerMarker) {
+          sellerMarker = L.marker(sellerCoords, {
+            icon: sellerIcon(),
+            zIndexOffset: 2000,
+          }).addTo(mapInstance);
+        } else {
+          sellerMarker.setLatLng(sellerCoords);
+          if (!mapInstance.hasLayer(sellerMarker)) {
+            sellerMarker.addTo(mapInstance);
+          }
+        }
+
+        sellerMarker.bindPopup(
+          `<div style="padding:10px 12px;font-family:Inter,sans-serif;min-width:140px;">
+            <div style="font-size:11px;font-weight:700;color:#74C843;margin-bottom:4px;">PONTO DE COLETA</div>
+            <div style="font-size:11px;color:#d1d5db;">Local definido pelo CEP informado.</div>
+          </div>`,
+          { maxWidth: 220, closeButton: true }
+        );
+        sellerMarker.bindTooltip("Ponto de coleta", {
+          permanent: true,
+          direction: "bottom",
+          offset: [0, 12],
+          className: "coleta-tooltip",
+        });
+      }
+
+      function highlightListSelection() {
+        const { mode, list } = getFilteredCarriers();
+        if (mode !== "results") return;
+        const el = document.getElementById("transportadoras-list");
+        const top = el.scrollTop;
+        document.getElementById("count-badge").textContent = String(list.length);
+        el.innerHTML = list
+          .map(
+            (c) => `
+          <div
+            class="carrier-card ${selectedId === c.id ? "active" : ""}"
+            onclick="selectCarrier('${c.id}')"
+          >
+            <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <div class="flex items-center gap-3 text-[11px] text-gray-400">
+              <span class="inline-flex items-center gap-1 text-seller-green">
+                <i class="fa-solid fa-left-right text-[10px]"></i>
+                ${c.km.toFixed(2)} km
+              </span>
+              <span class="inline-flex items-center gap-1 text-seller-green">
+                <i class="fa-regular fa-clock text-[10px]"></i>
+                ~${c.mins} min
+              </span>
+            </div>
+          </div>`
+          )
+          .join("");
+        el.scrollTop = top;
+
+        Object.keys(markersById).forEach((id) => {
+          markersById[id].setIcon(carrierIcon(id === selectedId));
         });
       }
 
@@ -1084,6 +1300,7 @@
         clusterGroup = L.markerClusterGroup({
           showCoverageOnHover: false,
           maxClusterRadius: 55,
+          spiderfyOnEveryZoom: false,
           iconCreateFunction: function (cluster) {
             const count = cluster.getChildCount();
             return L.divIcon({
@@ -1095,11 +1312,7 @@
         });
         mapInstance.addLayer(clusterGroup);
 
-        sellerMarker = L.marker(sellerCoords, {
-          icon: sellerIcon(),
-          zIndexOffset: 1000,
-        }).addTo(mapInstance);
-
+        updateColetaMarker();
         syncMapMarkers(allCarriersForMap(), { fit: true });
         setTimeout(() => mapInstance.invalidateSize(), 120);
       }
@@ -1107,70 +1320,63 @@
       function syncMapMarkers(list, opts = {}) {
         if (!mapInstance || !clusterGroup) return;
 
+        const keepSelected = selectedId;
+        const openAfter = opts.openSelected && keepSelected;
+
         clusterGroup.clearLayers();
         markersById = {};
+        carriersById = {};
 
         list.forEach((c) => {
-          const marker = L.marker([c.lat, c.lng], { icon: carrierIcon() });
-          marker.bindPopup(popupHtml(c), { maxWidth: 280 });
-          marker.on("click", () => {
+          carriersById[c.id] = c;
+          const marker = L.marker([c.lat, c.lng], {
+            icon: carrierIcon(c.id === selectedId),
+          });
+          marker.bindPopup(popupHtml(c), {
+            maxWidth: 280,
+            className: "carrier-leaflet-popup",
+            autoPan: true,
+            autoPanPaddingTopLeft: [360, 48],
+            autoPanPaddingBottomRight: [48, 48],
+            closeButton: true,
+          });
+          marker.on("click", (e) => {
+            if (e.originalEvent) {
+              L.DomEvent.stopPropagation(e.originalEvent);
+            }
             selectedId = c.id;
-            renderListKeepScroll();
+            highlightListSelection();
+            drawRouteToCarrier(c);
+            // Garante abertura mesmo com cluster / re-bind
+            setTimeout(() => marker.openPopup(), 0);
           });
           markersById[c.id] = marker;
           clusterGroup.addLayer(marker);
         });
 
-        if (sellerMarker) {
-          sellerMarker.setLatLng(sellerCoords);
-        }
+        updateColetaMarker();
 
         if (opts.fit && list.length) {
-          const bounds = L.latLngBounds([
-            sellerCoords,
-            ...list.map((c) => [c.lat, c.lng]),
-          ]);
-          mapInstance.fitBounds(bounds.pad(0.2));
+          const points = hasSearchedCep
+            ? [sellerCoords, ...list.map((c) => [c.lat, c.lng])]
+            : list.map((c) => [c.lat, c.lng]);
+          mapInstance.fitBounds(L.latLngBounds(points).pad(0.2));
         }
-      }
 
-      function renderListKeepScroll() {
-        const el = document.getElementById("transportadoras-list");
-        const top = el.scrollTop;
-        // Re-render only cards if we already have results; otherwise full render
-        const { mode, list } = getFilteredCarriers();
-        if (mode === "results") {
-          document.getElementById("count-badge").textContent = String(list.length);
-          el.innerHTML = list
-            .map(
-              (c) => `
-            <div
-              class="carrier-card ${selectedId === c.id ? "active" : ""}"
-              onclick="selectCarrier('${c.id}')"
-            >
-              <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
-              <div class="flex items-center gap-3 text-[11px] text-gray-400">
-                <span class="inline-flex items-center gap-1 text-seller-green">
-                  <i class="fa-solid fa-left-right text-[10px]"></i>
-                  ${c.km.toFixed(2)} km
-                </span>
-                <span class="inline-flex items-center gap-1 text-seller-green">
-                  <i class="fa-regular fa-clock text-[10px]"></i>
-                  ~${c.mins} min
-                </span>
-              </div>
-            </div>`
-            )
-            .join("");
-          el.scrollTop = top;
-        } else {
-          renderList();
+        if (openAfter && markersById[keepSelected]) {
+          const marker = markersById[keepSelected];
+          clusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
         }
       }
 
       function selectCarrier(id) {
         selectedId = id;
-        renderListKeepScroll();
+        const carrier =
+          carriersById[id] ||
+          enrichCarrier(CARRIERS.find((c) => c.id === id) || {});
+        highlightListSelection();
+        if (carrier?.lat) drawRouteToCarrier(carrier);
+
         const marker = markersById[id];
         if (marker && mapInstance) {
           clusterGroup.zoomToShowLayer(marker, () => {
@@ -1206,6 +1412,7 @@
 
         hasSearchedCep = true;
         selectedId = null;
+        clearRoute();
 
         const formatted = digits.slice(0, 5) + "-" + digits.slice(5);
         const noCoverage =
@@ -1218,23 +1425,22 @@
         lastCepHadCoverage = !noCoverage;
 
         if (noCoverage) {
-          // Still move map somewhere "far" for demo feel
           sellerCoords = coordsFromCep(digits);
-          if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
-          mapInstance.setView(sellerCoords, 11);
+          updateColetaMarker();
+          if (mapInstance) mapInstance.setView(sellerCoords, 12);
+          if (sellerMarker) sellerMarker.openPopup();
           renderList();
           showToastSeller("Busca concluída nesta região.", "warn");
           return;
         }
 
-        // Known SP demo CEP → center downtown-ish; others pseudo
         if (digits === "01001000") {
           sellerCoords = [-23.55052, -46.633308];
         } else {
           sellerCoords = coordsFromCep(digits);
         }
 
-        if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
+        updateColetaMarker();
         renderList();
         const { list } = getFilteredCarriers();
         if (list.length && mapInstance) {
@@ -1243,14 +1449,18 @@
             ...list.map((c) => [c.lat, c.lng]),
           ]);
           mapInstance.fitBounds(bounds.pad(0.25));
-        } else {
-          mapInstance.setView(sellerCoords, 12);
+        } else if (mapInstance) {
+          mapInstance.setView(sellerCoords, 13);
         }
-        showToastSeller(`Buscando parceiras próximas ao CEP ${formatted}...`);
+        if (sellerMarker) {
+          setTimeout(() => sellerMarker.openPopup(), 180);
+        }
+        showToastSeller(`Ponto de coleta definido para o CEP ${formatted}.`);
       }
 
       function onNameSearch() {
         selectedId = null;
+        clearRoute();
         renderList();
       }
 
@@ -1258,6 +1468,7 @@
         updateRadiusStyle();
         if (hasSearchedCep || document.getElementById("name-input").value.trim()) {
           selectedId = null;
+          clearRoute();
           renderList();
         }
       }
@@ -1271,7 +1482,8 @@
         lastCepHadCoverage = true;
         selectedId = null;
         sellerCoords = [-23.55052, -46.633308];
-        if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
+        clearRoute();
+        updateColetaMarker();
         renderList();
         if (mapInstance) {
           mapInstance.setView(sellerCoords, 12);
