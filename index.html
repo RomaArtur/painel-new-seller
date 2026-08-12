@@ -259,22 +259,28 @@
       }
 
       .carrier-card {
-        background: #121826;
-        border: 1px solid #1f2937;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-left: 3px solid transparent;
         border-radius: 10px;
         padding: 12px;
         cursor: pointer;
-        transition: border-color 0.15s ease, background 0.15s ease;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease,
+          box-shadow 0.15s ease;
       }
       .carrier-card:hover {
-        background: #161d2d;
-        border-color: #374151;
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.18);
       }
       .carrier-card.active {
         border-left-color: #74c843;
-        border-color: #2d3748;
-        background: #151c2c;
+        border-color: rgba(116, 200, 67, 0.35);
+        background: rgba(116, 200, 67, 0.12);
+        box-shadow: 0 0 0 1px rgba(116, 200, 67, 0.12);
       }
 
       input[type="range"].radius-slider {
@@ -287,8 +293,8 @@
           to right,
           #74c843 0%,
           #74c843 var(--pct, 20%),
-          #374151 var(--pct, 20%),
-          #374151 100%
+          rgba(255, 255, 255, 0.18) var(--pct, 20%),
+          rgba(255, 255, 255, 0.18) 100%
         );
         outline: none;
       }
@@ -313,7 +319,42 @@
       }
 
       .float-panel {
-        backdrop-filter: blur(8px);
+        background: rgba(18, 24, 38, 0.42);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow:
+          0 12px 40px rgba(0, 0, 0, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(18px) saturate(1.35);
+        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+      }
+      .float-panel .glass-input {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #fff;
+      }
+      .float-panel .glass-input::placeholder {
+        color: rgba(209, 213, 219, 0.55);
+      }
+      .float-panel .glass-input:focus {
+        outline: none;
+        border-color: rgba(116, 200, 67, 0.7);
+        background: rgba(255, 255, 255, 0.09);
+        box-shadow: 0 0 0 3px rgba(116, 200, 67, 0.15);
+      }
+      .float-panel .glass-btn-muted {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(229, 231, 235, 0.9);
+      }
+      .float-panel .glass-btn-muted:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .float-panel .glass-divider {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .float-panel .glass-empty-icon {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       @media (max-width: 1023px) {
@@ -566,17 +607,6 @@
         </div>
 
         <div class="flex items-center space-x-3">
-          <div class="relative hidden md:block w-64">
-            <i
-              class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"
-            ></i>
-            <input
-              type="text"
-              placeholder="Buscar no sistema..."
-              disabled
-              class="w-full bg-[#1a2234] border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-xs text-gray-500 cursor-not-allowed"
-            />
-          </div>
           <div class="relative cursor-pointer">
             <div
               class="w-8 h-8 rounded-full bg-[#1a2234] border border-gray-700 flex items-center justify-center text-gray-400"
@@ -596,39 +626,39 @@
 
         <!-- FLOATING SEARCH / LIST PANEL -->
         <aside
-          class="float-panel absolute z-[500] left-3 right-3 top-3 lg:left-4 lg:right-auto lg:top-4 lg:w-[340px] bg-[#171E2E]/95 border border-gray-800 rounded-xl shadow-float flex flex-col overflow-hidden max-h-[calc(100%-1.5rem)]"
+          class="float-panel absolute z-[500] left-3 right-3 top-3 lg:left-4 lg:right-auto lg:top-4 lg:w-[340px] rounded-xl flex flex-col overflow-hidden max-h-[calc(100%-1.5rem)]"
         >
           <div class="p-4 space-y-4 shrink-0">
             <div>
               <label
-                class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2"
+                class="block text-[11px] font-bold text-gray-200/90 uppercase tracking-wider mb-2"
               >
                 Busca por nome da transportadora
               </label>
               <div class="relative">
                 <i
-                  class="fa-solid fa-building absolute left-3 top-3 text-gray-500 text-xs"
+                  class="fa-solid fa-building absolute left-3 top-3 text-gray-400 text-xs"
                 ></i>
                 <input
                   type="text"
                   id="name-input"
                   placeholder="Ex: Dimensao Express"
                   oninput="onNameSearch()"
-                  class="w-full bg-[#121826] border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-seller-green"
+                  class="glass-input w-full rounded-lg pl-8 pr-3 py-2 text-xs"
                 />
               </div>
             </div>
 
             <div>
               <label
-                class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2"
+                class="block text-[11px] font-bold text-gray-200/90 uppercase tracking-wider mb-2"
               >
                 CEP de coleta
               </label>
               <div class="flex space-x-2">
                 <div class="relative flex-1">
                   <i
-                    class="fa-solid fa-location-dot absolute left-3 top-3 text-gray-500 text-xs"
+                    class="fa-solid fa-location-dot absolute left-3 top-3 text-gray-400 text-xs"
                   ></i>
                   <input
                     type="text"
@@ -636,25 +666,25 @@
                     placeholder="Ex: 01001-000"
                     maxlength="9"
                     onkeydown="if(event.key==='Enter') buscarPorCep()"
-                    class="w-full bg-[#121826] border border-gray-700 rounded-lg pl-8 pr-9 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-seller-green"
+                    class="glass-input w-full rounded-lg pl-8 pr-9 py-2 text-xs"
                   />
                   <button
                     type="button"
                     onclick="usarLocalizacaoDemo()"
                     title="Usar localização aproximada"
-                    class="absolute right-2 top-1.5 text-gray-500 hover:text-seller-green p-1"
+                    class="absolute right-2 top-1.5 text-gray-400 hover:text-seller-green p-1"
                   >
                     <i class="fa-solid fa-location-crosshairs text-xs"></i>
                   </button>
                 </div>
                 <button
                   onclick="buscarPorCep()"
-                  class="bg-seller-green hover:bg-seller-greenDark text-white w-10 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0"
+                  class="bg-seller-green/90 hover:bg-seller-green text-white w-10 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0 shadow-sm"
                 >
                   <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
               </div>
-              <p class="text-[10px] text-gray-500 mt-1.5">
+              <p class="text-[10px] text-gray-400 mt-1.5">
                 Demo: use
                 <button
                   type="button"
@@ -677,15 +707,15 @@
 
             <div>
               <div
-                class="flex justify-between items-center text-xs text-gray-400 mb-2"
+                class="flex justify-between items-center text-xs text-gray-300 mb-2"
               >
                 <span
-                  class="text-[10px] font-bold uppercase tracking-wider text-gray-400"
+                  class="text-[10px] font-bold uppercase tracking-wider text-gray-300"
                   >Raio de busca</span
                 >
                 <span
                   id="radius-val"
-                  class="bg-seller-green/20 text-seller-green px-2 py-0.5 rounded text-[11px] font-bold"
+                  class="bg-seller-green/25 text-seller-green px-2 py-0.5 rounded text-[11px] font-bold"
                   >10 KM</span
                 >
               </div>
@@ -702,18 +732,18 @@
 
             <button
               onclick="limparBusca()"
-              class="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-300 border border-gray-700 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5"
+              class="glass-btn-muted w-full py-1.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5"
             >
               <i class="fa-solid fa-rotate-left text-[10px]"></i>
               <span>Limpar</span>
             </button>
           </div>
 
-          <hr class="border-gray-800 shrink-0" />
+          <hr class="glass-divider shrink-0" />
 
           <div class="flex-1 flex flex-col min-h-0 px-4 pt-4 pb-3">
             <div
-              class="flex items-center justify-between text-xs text-gray-400 mb-3 shrink-0"
+              class="flex items-center justify-between text-xs text-gray-300 mb-3 shrink-0"
             >
               <span>Transportadoras Próximas</span>
               <span
@@ -1003,8 +1033,8 @@
         if (mode === "idle") {
           container.innerHTML = `
             <div class="flex flex-col items-center justify-center text-center py-10 px-4 text-gray-500">
-              <div class="w-14 h-14 rounded-full bg-[#121826] border border-gray-800 flex items-center justify-center mb-3">
-                <i class="fa-regular fa-map text-xl text-gray-600"></i>
+              <div class="w-14 h-14 rounded-full glass-empty-icon flex items-center justify-center mb-3">
+                <i class="fa-regular fa-map text-xl text-gray-400"></i>
               </div>
               <p class="text-xs leading-relaxed">
                 Digite um CEP para ver as transportadoras próximas.
@@ -1074,7 +1104,7 @@
           <div class="carrier-popup-wrap" style="width:260px;background:#171E2E;color:#fff;">
             <div style="display:flex;align-items:center;gap:10px;padding:14px 36px 10px 14px;border-bottom:1px solid #2a3347;">
               <div style="width:36px;height:36px;border-radius:8px;background:#121826;border:1px solid #374151;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fa-solid fa-box" style="color:#74C843;font-size:13px;"></i>
+                <i class="fa-solid fa-truck" style="color:#74C843;font-size:13px;"></i>
               </div>
               <strong style="font-size:12px;line-height:1.25;letter-spacing:0.02em;">${c.name}</strong>
             </div>
@@ -1122,7 +1152,7 @@
       function sellerIcon() {
         return L.divIcon({
           className: "seller-div-icon",
-          html: `<div class="seller-marker"><i class="fa-solid fa-box"></i></div>`,
+          html: `<div class="seller-marker"><i class="fa-solid fa-store"></i></div>`,
           iconSize: [40, 40],
           iconAnchor: [20, 20],
         });
