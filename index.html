@@ -259,28 +259,36 @@
       }
 
       .carrier-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(8, 12, 22, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-left: 3px solid transparent;
         border-radius: 10px;
         padding: 12px;
         cursor: pointer;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         transition:
           border-color 0.15s ease,
           background 0.15s ease,
           box-shadow 0.15s ease;
       }
       .carrier-card:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(8, 12, 22, 0.58);
+        border-color: rgba(255, 255, 255, 0.28);
       }
       .carrier-card.active {
         border-left-color: #74c843;
-        border-color: rgba(116, 200, 67, 0.35);
-        background: rgba(116, 200, 67, 0.12);
-        box-shadow: 0 0 0 1px rgba(116, 200, 67, 0.12);
+        border-color: rgba(116, 200, 67, 0.55);
+        background: rgba(20, 40, 18, 0.55);
+        box-shadow: 0 0 0 1px rgba(116, 200, 67, 0.2);
+      }
+      .carrier-card h4 {
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+      }
+      .carrier-card .meta-accent {
+        color: #9beb66 !important;
+        font-weight: 600;
       }
 
       input[type="range"].radius-slider {
@@ -293,8 +301,8 @@
           to right,
           #74c843 0%,
           #74c843 var(--pct, 20%),
-          rgba(255, 255, 255, 0.18) var(--pct, 20%),
-          rgba(255, 255, 255, 0.18) 100%
+          rgba(255, 255, 255, 0.28) var(--pct, 20%),
+          rgba(255, 255, 255, 0.28) 100%
         );
         outline: none;
       }
@@ -319,42 +327,128 @@
       }
 
       .float-panel {
-        background: rgba(18, 24, 38, 0.42);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(10, 14, 24, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow:
-          0 12px 40px rgba(0, 0, 0, 0.28),
-          inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(18px) saturate(1.35);
-        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+          0 16px 48px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(22px) saturate(1.4);
+        -webkit-backdrop-filter: blur(22px) saturate(1.4);
+        color: #ffffff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+      }
+      .float-panel .panel-label {
+        color: #ffffff;
+        letter-spacing: 0.06em;
+      }
+      .float-panel .panel-muted {
+        color: #e5e7eb;
+      }
+      .float-panel .panel-hint {
+        color: #f3f4f6;
+      }
+      .float-panel .panel-icon {
+        color: #f9fafb;
+      }
+      .float-panel .glass-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .float-panel .glass-field > .field-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #f9fafb;
+        font-size: 12px;
+        line-height: 1;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .float-panel .glass-field > .field-action {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #f9fafb;
+        border-radius: 6px;
+        z-index: 1;
+      }
+      .float-panel .glass-field > .field-action:hover {
+        color: #74c843;
+        background: rgba(116, 200, 67, 0.12);
       }
       .float-panel .glass-input {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: #fff;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        color: #ffffff;
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 1.25;
+        height: 38px;
+        padding: 0 12px 0 34px;
+        text-shadow: none;
+        box-sizing: border-box;
+      }
+      .float-panel .glass-input.has-trailing {
+        padding-right: 38px;
       }
       .float-panel .glass-input::placeholder {
-        color: rgba(209, 213, 219, 0.55);
+        color: rgba(255, 255, 255, 0.72);
+        opacity: 1;
+        line-height: 1.25;
       }
       .float-panel .glass-input:focus {
         outline: none;
-        border-color: rgba(116, 200, 67, 0.7);
-        background: rgba(255, 255, 255, 0.09);
-        box-shadow: 0 0 0 3px rgba(116, 200, 67, 0.15);
+        border-color: #74c843;
+        background: rgba(0, 0, 0, 0.45);
+        box-shadow: 0 0 0 3px rgba(116, 200, 67, 0.22);
+      }
+      .float-panel .glass-search-btn {
+        height: 38px;
+        width: 40px;
       }
       .float-panel .glass-btn-muted {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: rgba(229, 231, 235, 0.9);
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        color: #ffffff;
+        font-weight: 600;
       }
       .float-panel .glass-btn-muted:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.18);
       }
       .float-panel .glass-divider {
-        border-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.22);
       }
       .float-panel .glass-empty-icon {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+      }
+      .float-panel .panel-section-title {
+        color: #ffffff;
+        font-weight: 600;
+      }
+      .float-panel .empty-copy {
+        color: #f9fafb;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+      .float-panel .empty-copy-warn {
+        color: #ffffff;
+        font-weight: 600;
+        line-height: 1.55;
       }
 
       @media (max-width: 1023px) {
@@ -631,65 +725,61 @@
           <div class="p-4 space-y-4 shrink-0">
             <div>
               <label
-                class="block text-[11px] font-bold text-gray-200/90 uppercase tracking-wider mb-2"
+                class="panel-label block text-[11px] font-bold uppercase mb-2"
               >
                 Busca por nome da transportadora
               </label>
-              <div class="relative">
-                <i
-                  class="fa-solid fa-building absolute left-3 top-3 text-gray-400 text-xs"
-                ></i>
+              <div class="glass-field">
+                <i class="fa-solid fa-building field-icon"></i>
                 <input
                   type="text"
                   id="name-input"
                   placeholder="Ex: Dimensao Express"
                   oninput="onNameSearch()"
-                  class="glass-input w-full rounded-lg pl-8 pr-3 py-2 text-xs"
+                  class="glass-input w-full rounded-lg"
                 />
               </div>
             </div>
 
             <div>
               <label
-                class="block text-[11px] font-bold text-gray-200/90 uppercase tracking-wider mb-2"
+                class="panel-label block text-[11px] font-bold uppercase mb-2"
               >
                 CEP de coleta
               </label>
-              <div class="flex space-x-2">
-                <div class="relative flex-1">
-                  <i
-                    class="fa-solid fa-location-dot absolute left-3 top-3 text-gray-400 text-xs"
-                  ></i>
+              <div class="flex items-center space-x-2">
+                <div class="glass-field flex-1">
+                  <i class="fa-solid fa-location-dot field-icon"></i>
                   <input
                     type="text"
                     id="cep-input"
                     placeholder="Ex: 01001-000"
                     maxlength="9"
                     onkeydown="if(event.key==='Enter') buscarPorCep()"
-                    class="glass-input w-full rounded-lg pl-8 pr-9 py-2 text-xs"
+                    class="glass-input has-trailing w-full rounded-lg"
                   />
                   <button
                     type="button"
                     onclick="usarLocalizacaoDemo()"
                     title="Usar localização aproximada"
-                    class="absolute right-2 top-1.5 text-gray-400 hover:text-seller-green p-1"
+                    class="field-action"
                   >
                     <i class="fa-solid fa-location-crosshairs text-xs"></i>
                   </button>
                 </div>
                 <button
                   onclick="buscarPorCep()"
-                  class="bg-seller-green/90 hover:bg-seller-green text-white w-10 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0 shadow-sm"
+                  class="glass-search-btn bg-seller-green hover:bg-seller-greenDark text-white rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0 shadow-sm"
                 >
                   <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
               </div>
-              <p class="text-[10px] text-gray-400 mt-1.5">
+              <p class="panel-hint text-[10px] mt-1.5">
                 Demo: use
                 <button
                   type="button"
                   onclick="fillCep('01001-000')"
-                  class="text-seller-green hover:underline"
+                  class="text-seller-green font-semibold hover:underline"
                 >
                   01001-000</button
                 >
@@ -697,7 +787,7 @@
                 <button
                   type="button"
                   onclick="fillCep('69000-000')"
-                  class="text-seller-green hover:underline"
+                  class="text-seller-green font-semibold hover:underline"
                 >
                   69000-000</button
                 >
@@ -707,15 +797,14 @@
 
             <div>
               <div
-                class="flex justify-between items-center text-xs text-gray-300 mb-2"
+                class="flex justify-between items-center text-xs panel-muted mb-2"
               >
-                <span
-                  class="text-[10px] font-bold uppercase tracking-wider text-gray-300"
+                <span class="panel-label text-[10px] font-bold uppercase"
                   >Raio de busca</span
                 >
                 <span
                   id="radius-val"
-                  class="bg-seller-green/25 text-seller-green px-2 py-0.5 rounded text-[11px] font-bold"
+                  class="bg-seller-green/30 text-seller-green px-2 py-0.5 rounded text-[11px] font-bold"
                   >10 KM</span
                 >
               </div>
@@ -743,7 +832,7 @@
 
           <div class="flex-1 flex flex-col min-h-0 px-4 pt-4 pb-3">
             <div
-              class="flex items-center justify-between text-xs text-gray-300 mb-3 shrink-0"
+              class="flex items-center justify-between text-xs panel-section-title mb-3 shrink-0"
             >
               <span>Transportadoras Próximas</span>
               <span
@@ -1032,11 +1121,11 @@
 
         if (mode === "idle") {
           container.innerHTML = `
-            <div class="flex flex-col items-center justify-center text-center py-10 px-4 text-gray-500">
+            <div class="flex flex-col items-center justify-center text-center py-10 px-4">
               <div class="w-14 h-14 rounded-full glass-empty-icon flex items-center justify-center mb-3">
-                <i class="fa-regular fa-map text-xl text-gray-400"></i>
+                <i class="fa-regular fa-map text-xl text-white"></i>
               </div>
-              <p class="text-xs leading-relaxed">
+              <p class="empty-copy text-xs">
                 Digite um CEP para ver as transportadoras próximas.
               </p>
             </div>`;
@@ -1048,10 +1137,10 @@
         if (mode === "no-coverage") {
           container.innerHTML = `
             <div class="flex flex-col items-center justify-center text-center py-8 px-3">
-              <div class="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-3">
-                <i class="fa-solid fa-location-pin-lock text-xl text-amber-400"></i>
+              <div class="w-14 h-14 rounded-full bg-amber-400/20 border border-amber-300/50 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-location-pin-lock text-xl text-amber-300"></i>
               </div>
-              <p class="text-xs text-gray-200 font-medium leading-relaxed">
+              <p class="empty-copy-warn text-xs">
                 Não temos um parceiro nesta região, em breve retornaremos o contato contigo.
               </p>
             </div>`;
@@ -1062,9 +1151,9 @@
 
         if (mode === "empty-filter") {
           container.innerHTML = `
-            <div class="flex flex-col items-center justify-center text-center py-8 px-3 text-gray-500">
-              <i class="fa-solid fa-filter-circle-xmark text-xl mb-3 text-gray-600"></i>
-              <p class="text-xs leading-relaxed">
+            <div class="flex flex-col items-center justify-center text-center py-8 px-3">
+              <i class="fa-solid fa-filter-circle-xmark text-xl mb-3 text-white"></i>
+              <p class="empty-copy text-xs">
                 Nenhuma transportadora encontrada com esses filtros.
               </p>
             </div>`;
@@ -1080,13 +1169,13 @@
             class="carrier-card ${selectedId === c.id ? "active" : ""}"
             onclick="selectCarrier('${c.id}')"
           >
-            <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
-            <div class="flex items-center gap-3 text-[11px] text-gray-400">
-              <span class="inline-flex items-center gap-1 text-seller-green">
+            <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="meta-accent inline-flex items-center gap-1">
                 <i class="fa-solid fa-left-right text-[10px]"></i>
                 ${c.km.toFixed(2)} km
               </span>
-              <span class="inline-flex items-center gap-1 text-seller-green">
+              <span class="meta-accent inline-flex items-center gap-1">
                 <i class="fa-regular fa-clock text-[10px]"></i>
                 ~${c.mins} min
               </span>
@@ -1285,13 +1374,13 @@
             class="carrier-card ${selectedId === c.id ? "active" : ""}"
             onclick="selectCarrier('${c.id}')"
           >
-            <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
-            <div class="flex items-center gap-3 text-[11px] text-gray-400">
-              <span class="inline-flex items-center gap-1 text-seller-green">
+            <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="meta-accent inline-flex items-center gap-1">
                 <i class="fa-solid fa-left-right text-[10px]"></i>
                 ${c.km.toFixed(2)} km
               </span>
-              <span class="inline-flex items-center gap-1 text-seller-green">
+              <span class="meta-accent inline-flex items-center gap-1">
                 <i class="fa-regular fa-clock text-[10px]"></i>
                 ~${c.mins} min
               </span>
