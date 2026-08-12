@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRACKen Seller — Encontre sua Transportadora</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+    />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              seller: {
+                green: "#74C843",
+                greenDark: "#5EB22F",
+                darkBg: "#121826",
+                darkCard: "#1E293B",
+                grayText: "#6B7280",
+                lightBg: "#F3F4F6",
+                navActive: "#4A4E54",
+                border: "#E5E7EB",
+              },
+            },
+            boxShadow: {
+              seller: "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)",
+              float:
+                "0 12px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f3f4f6;
+        color: #374151;
+      }
+
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+
+      .nav-item-active {
+        background-color: #4a4e54 !important;
+        color: #ffffff !important;
+        position: relative;
+      }
+      .nav-item-active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 4px;
+        bottom: 4px;
+        width: 4px;
+        background-color: #74c843;
+        border-top-right-radius: 2px;
+        border-bottom-right-radius: 2px;
+      }
+      .nav-item-active i {
+        color: #ffffff !important;
+      }
+
+      .nav-locked {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      #map {
+        background: #0f172a;
+      }
+
+      .leaflet-control-zoom a {
+        background: #171e2e !important;
+        color: #e5e7eb !important;
+        border-color: #374151 !important;
+        width: 30px !important;
+        height: 30px !important;
+        line-height: 30px !important;
+      }
+      .leaflet-control-zoom a:hover {
+        background: #1e293b !important;
+        color: #74c843 !important;
+      }
+      .leaflet-bar {
+        border: 1px solid #374151 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+      }
+
+      .carrier-marker {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #0b1220;
+        border: 2px solid #74c843;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      }
+      .carrier-marker i {
+        color: #74c843;
+        font-size: 13px;
+      }
+
+      .seller-marker {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #74c843;
+        border: 3px solid #0b1220;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+      }
+      .seller-marker i {
+        color: #0b1220;
+        font-size: 14px;
+      }
+
+      .marker-cluster-custom {
+        background: transparent !important;
+      }
+      .marker-cluster-custom div {
+        width: 36px;
+        height: 36px;
+        margin-left: 2px;
+        margin-top: 2px;
+        border-radius: 50%;
+        background: #74c843;
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: 2px solid #5eb22f;
+      }
+
+      .leaflet-popup-content-wrapper {
+        background: #171e2e;
+        color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        padding: 0;
+        overflow: hidden;
+      }
+      .leaflet-popup-content {
+        margin: 0;
+        width: 260px !important;
+      }
+      .leaflet-popup-tip {
+        background: #171e2e;
+      }
+      .leaflet-container a.leaflet-popup-close-button {
+        color: #9ca3af;
+        top: 8px;
+        right: 8px;
+      }
+
+      .carrier-card {
+        background: #121826;
+        border: 1px solid #1f2937;
+        border-left: 3px solid transparent;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+      .carrier-card:hover {
+        background: #161d2d;
+        border-color: #374151;
+      }
+      .carrier-card.active {
+        border-left-color: #74c843;
+        border-color: #2d3748;
+        background: #151c2c;
+      }
+
+      input[type="range"].radius-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(
+          to right,
+          #74c843 0%,
+          #74c843 var(--pct, 20%),
+          #374151 var(--pct, 20%),
+          #374151 100%
+        );
+        outline: none;
+      }
+      input[type="range"].radius-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #74c843;
+        border: 2px solid #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+      }
+      input[type="range"].radius-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #74c843;
+        border: 2px solid #fff;
+        cursor: pointer;
+      }
+
+      .float-panel {
+        backdrop-filter: blur(8px);
+      }
+
+      @media (max-width: 1023px) {
+        .float-panel {
+          max-height: min(52vh, 480px);
+        }
+      }
+    </style>
+  </head>
+  <body class="flex h-screen overflow-hidden text-sm bg-[#F3F4F6]">
+    <!-- DESKTOP SIDEBAR -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-white border-r border-gray-200 flex flex-col h-full hidden md:flex z-20 shrink-0 shadow-sm"
+    >
+      <div class="h-16 flex items-center px-5 border-b border-gray-100">
+        <div class="flex items-center">
+          <img
+            src="imgi_1_seller.png"
+            alt="TRACKen Seller"
+            class="h-10 w-auto object-contain"
+          />
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <div>
+          <nav class="space-y-1">
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Painel')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-house w-4 text-center"></i>
+                <span>Painel</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Pedidos')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-box-archive w-4 text-center"></i>
+                <span>Pedidos</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Financeiro')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-coins w-4 text-center"></i>
+                <span>Financeiro</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Notificação')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-regular fa-bell w-4 text-center"></i>
+                <span>Notificação</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Suporte')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-headset w-4 text-center"></i>
+                <span>Suporte</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+          </nav>
+        </div>
+
+        <div>
+          <div
+            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
+          >
+            FERRAMENTAS
+          </div>
+          <nav class="space-y-1">
+            <a
+              href="#"
+              id="nav-transportadora"
+              class="nav-btn nav-item-active flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug"
+            >
+              <i class="fa-solid fa-truck w-4 text-center text-gray-500"></i>
+              <span>Encontre sua Transportadora</span>
+            </a>
+
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Controle de reputação')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug"
+            >
+              <div class="flex items-center space-x-3">
+                <i
+                  class="fa-solid fa-clock-rotate-left w-4 text-center text-gray-500"
+                ></i>
+                <span class="flex-1">Controle de reputação</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+          </nav>
+        </div>
+
+        <div>
+          <div
+            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
+          >
+            CONFIGURAÇÃO
+          </div>
+          <nav class="space-y-1">
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Minha Conta')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-regular fa-user w-4 text-center"></i>
+                <span>Minha Conta</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+          </nav>
+        </div>
+
+        <div>
+          <div
+            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
+          >
+            SISTEMA
+          </div>
+          <nav class="space-y-1">
+            <a
+              href="#"
+              onclick="blockedNav(event, 'Desconectar')"
+              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-power-off w-4 text-center"></i>
+                <span>Desconectar</span>
+              </div>
+              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+            </a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-gray-100">
+        <div
+          class="text-[11px] text-gray-500 leading-relaxed bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+        >
+          Demo seller sem vínculo. Demais telas liberam após contratar uma
+          transportadora.
+        </div>
+      </div>
+    </aside>
+
+    <!-- MOBILE SIDEBAR -->
+    <div
+      id="mobile-overlay"
+      class="fixed inset-0 z-40 bg-gray-900/50 hidden transition-opacity"
+      onclick="toggleMobileMenu(false)"
+    ></div>
+    <aside
+      id="mobile-sidebar"
+      class="fixed top-0 left-0 bottom-0 w-64 bg-white z-50 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl md:hidden"
+    >
+      <div
+        class="h-16 flex items-center justify-between px-5 border-b border-gray-100"
+      >
+        <img
+          src="imgi_1_seller.png"
+          alt="TRACKen Seller"
+          class="h-9 w-auto object-contain"
+        />
+        <button
+          onclick="toggleMobileMenu(false)"
+          class="text-gray-400 hover:text-gray-600 p-1"
+        >
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <div>
+          <div
+            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
+          >
+            FERRAMENTAS
+          </div>
+          <a
+            href="#"
+            onclick="toggleMobileMenu(false)"
+            class="flex items-center space-x-3 px-3 py-2 text-xs rounded-lg bg-[#4A4E54] text-white"
+          >
+            <i class="fa-solid fa-truck w-4 text-center"></i>
+            <span>Encontre sua Transportadora</span>
+          </a>
+          <a
+            href="#"
+            onclick="blockedNav(event, 'Controle de reputação')"
+            class="nav-locked flex items-center justify-between px-3 py-2 text-gray-600 text-xs mt-1"
+          >
+            <div class="flex items-center space-x-3">
+              <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i>
+              <span>Controle de reputação</span>
+            </div>
+            <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <header
+        class="h-14 bg-[#121826] border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between shrink-0 z-10"
+      >
+        <div class="flex items-center space-x-3">
+          <button
+            onclick="toggleMobileMenu(true)"
+            class="md:hidden text-gray-300 hover:text-white focus:outline-none"
+          >
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+          <div class="hidden sm:flex items-center text-xs text-gray-400 space-x-1.5">
+            <span>Ferramentas</span>
+            <i class="fa-solid fa-chevron-right text-[9px] text-gray-500"></i>
+            <span class="text-white font-medium"
+              >Encontre sua Transportadora</span
+            >
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="relative hidden md:block w-64">
+            <i
+              class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-500 text-xs"
+            ></i>
+            <input
+              type="text"
+              placeholder="Buscar no sistema..."
+              disabled
+              class="w-full bg-[#1a2234] border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-xs text-gray-500 cursor-not-allowed"
+            />
+          </div>
+          <div class="relative cursor-pointer">
+            <div
+              class="w-8 h-8 rounded-full bg-[#1a2234] border border-gray-700 flex items-center justify-center text-gray-400"
+            >
+              <i class="fa-solid fa-user text-sm"></i>
+            </div>
+            <span
+              class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-seller-green border-2 border-[#121826] rounded-full"
+            ></span>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 relative overflow-hidden bg-[#0F172A]">
+        <!-- FULLSCREEN MAP -->
+        <div id="map" class="absolute inset-0 z-0"></div>
+
+        <!-- FLOATING SEARCH / LIST PANEL -->
+        <aside
+          class="float-panel absolute z-[500] left-3 right-3 top-3 lg:left-4 lg:right-auto lg:top-4 lg:w-[340px] bg-[#171E2E]/95 border border-gray-800 rounded-xl shadow-float flex flex-col overflow-hidden max-h-[calc(100%-1.5rem)]"
+        >
+          <div class="p-4 space-y-4 shrink-0">
+            <div>
+              <label
+                class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2"
+              >
+                Busca por nome da transportadora
+              </label>
+              <div class="relative">
+                <i
+                  class="fa-solid fa-building absolute left-3 top-3 text-gray-500 text-xs"
+                ></i>
+                <input
+                  type="text"
+                  id="name-input"
+                  placeholder="Ex: Dimensao Express"
+                  oninput="onNameSearch()"
+                  class="w-full bg-[#121826] border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-seller-green"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                class="block text-[11px] font-bold text-gray-300 uppercase tracking-wider mb-2"
+              >
+                CEP de coleta
+              </label>
+              <div class="flex space-x-2">
+                <div class="relative flex-1">
+                  <i
+                    class="fa-solid fa-location-dot absolute left-3 top-3 text-gray-500 text-xs"
+                  ></i>
+                  <input
+                    type="text"
+                    id="cep-input"
+                    placeholder="Ex: 01001-000"
+                    maxlength="9"
+                    onkeydown="if(event.key==='Enter') buscarPorCep()"
+                    class="w-full bg-[#121826] border border-gray-700 rounded-lg pl-8 pr-9 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-seller-green"
+                  />
+                  <button
+                    type="button"
+                    onclick="usarLocalizacaoDemo()"
+                    title="Usar localização aproximada"
+                    class="absolute right-2 top-1.5 text-gray-500 hover:text-seller-green p-1"
+                  >
+                    <i class="fa-solid fa-location-crosshairs text-xs"></i>
+                  </button>
+                </div>
+                <button
+                  onclick="buscarPorCep()"
+                  class="bg-seller-green hover:bg-seller-greenDark text-white w-10 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0"
+                >
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+              </div>
+              <p class="text-[10px] text-gray-500 mt-1.5">
+                Demo: use
+                <button
+                  type="button"
+                  onclick="fillCep('01001-000')"
+                  class="text-seller-green hover:underline"
+                >
+                  01001-000</button
+                >
+                (com parceiros) ou
+                <button
+                  type="button"
+                  onclick="fillCep('69000-000')"
+                  class="text-seller-green hover:underline"
+                >
+                  69000-000</button
+                >
+                (sem parceiros).
+              </p>
+            </div>
+
+            <div>
+              <div
+                class="flex justify-between items-center text-xs text-gray-400 mb-2"
+              >
+                <span
+                  class="text-[10px] font-bold uppercase tracking-wider text-gray-400"
+                  >Raio de busca</span
+                >
+                <span
+                  id="radius-val"
+                  class="bg-seller-green/20 text-seller-green px-2 py-0.5 rounded text-[11px] font-bold"
+                  >10 KM</span
+                >
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                value="10"
+                id="radius-slider"
+                class="radius-slider cursor-pointer"
+                oninput="onRadiusChange()"
+              />
+            </div>
+
+            <button
+              onclick="limparBusca()"
+              class="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-300 border border-gray-700 py-1.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5"
+            >
+              <i class="fa-solid fa-rotate-left text-[10px]"></i>
+              <span>Limpar</span>
+            </button>
+          </div>
+
+          <hr class="border-gray-800 shrink-0" />
+
+          <div class="flex-1 flex flex-col min-h-0 px-4 pt-4 pb-3">
+            <div
+              class="flex items-center justify-between text-xs text-gray-400 mb-3 shrink-0"
+            >
+              <span>Transportadoras Próximas</span>
+              <span
+                id="count-badge"
+                class="bg-seller-green text-white px-2 py-0.5 rounded-full font-bold text-[10px]"
+                >0</span
+              >
+            </div>
+
+            <div
+              id="transportadoras-list"
+              class="flex-1 overflow-y-auto space-y-2.5 pr-0.5 min-h-[140px]"
+            >
+              <!-- filled by JS -->
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script>
+      // ============================================================
+      // MOCK DATA
+      // ============================================================
+      const CARRIERS = [
+        {
+          id: "mb-flex",
+          name: "MB FLEX EXPRESS",
+          address: "AV. OTAVIANO ALVES DE LIMA, 4400 - FAZENDA DO CARMO",
+          phone: "(11) 98811-2200",
+          email: "contato@mbflex.com.br",
+          lat: -23.4982,
+          lng: -46.7481,
+          baseKm: 1.63,
+          mins: 6,
+        },
+        {
+          id: "pantera",
+          name: "PANTERA ENVIOS FLEX",
+          address: "RUA VOLUNTÁRIOS DA FRATERNIDADE, 112 - LAPA",
+          phone: "(11) 97654-3311",
+          email: "ops@panteraenvios.com.br",
+          lat: -23.5214,
+          lng: -46.7042,
+          baseKm: 2.41,
+          mins: 9,
+        },
+        {
+          id: "dimensao",
+          name: "DIMENSAO EXPRESS",
+          address: "RUA DOMINGOS JORGE, 401 - VILA SOCORRO",
+          phone: "(11) 98727-4808",
+          email: "diogenes@dimensaoexpress.com.br",
+          lat: -23.6581,
+          lng: -46.7124,
+          baseKm: 4.12,
+          mins: 14,
+        },
+        {
+          id: "alfa",
+          name: "ALFA CARGAS & ENTREGAS",
+          address: "RUA DA CONSOLAÇÃO, 2100 - CONSOLAÇÃO",
+          phone: "(11) 3456-7788",
+          email: "coleta@alfacargas.com.br",
+          lat: -23.5552,
+          lng: -46.6601,
+          baseKm: 3.4,
+          mins: 12,
+        },
+        {
+          id: "verde",
+          name: "VERDE TRANS EXPRESS",
+          address: "AV. PAULISTA, 900 - BELA VISTA",
+          phone: "(11) 3999-1010",
+          email: "hello@verdetrans.com.br",
+          lat: -23.5648,
+          lng: -46.6519,
+          baseKm: 4.8,
+          mins: 16,
+        },
+        {
+          id: "express-sp",
+          name: "EXPRESS LOGÍSTICA SP",
+          address: "RUA VERGUEIRO, 1450 - PARAÍSO",
+          phone: "(11) 3222-9090",
+          email: "parceiros@expresssp.com.br",
+          lat: -23.5741,
+          lng: -46.6398,
+          baseKm: 1.2,
+          mins: 5,
+        },
+        {
+          id: "norte-log",
+          name: "NORTE LOG FLEX",
+          address: "AV. BRAZ LEME, 1500 - SANTANA",
+          phone: "(11) 98111-4455",
+          email: "ops@nortelog.com.br",
+          lat: -23.5089,
+          lng: -46.6291,
+          baseKm: 5.6,
+          mins: 18,
+        },
+        {
+          id: "carandiru-ship",
+          name: "CARANDIRU SHIP",
+          address: "RUA VOLUNTÁRIOS DA PÁTRIA, 800 - SANTANA",
+          phone: "(11) 97777-1212",
+          email: "contato@carandiruship.com.br",
+          lat: -23.5124,
+          lng: -46.6245,
+          baseKm: 6.1,
+          mins: 20,
+        },
+        {
+          id: "bom-retiro",
+          name: "BOM RETIRO CARGAS",
+          address: "RUA RIBEIRO DE LIMA, 200 - BOM RETIRO",
+          phone: "(11) 3333-5566",
+          email: "coleta@bomretirocargas.com.br",
+          lat: -23.5289,
+          lng: -46.6352,
+          baseKm: 2.9,
+          mins: 11,
+        },
+        {
+          id: "vila-maria",
+          name: "VILA MARIA ENTREGAS",
+          address: "AV. GUILHERME COTCHING, 700 - VILA MARIA",
+          phone: "(11) 96555-8080",
+          email: "ola@vilamariaentregas.com.br",
+          lat: -23.5156,
+          lng: -46.5842,
+          baseKm: 7.4,
+          mins: 24,
+        },
+      ];
+
+      // CEPs sem cobertura (demo)
+      const CEP_SEM_COBERTURA = new Set([
+        "69000000",
+        "69000-000",
+        "78000000",
+        "78000-000",
+        "99999999",
+        "99999-999",
+      ]);
+
+      let mapInstance = null;
+      let clusterGroup = null;
+      let sellerMarker = null;
+      let markersById = {};
+      let selectedId = null;
+      let hasSearchedCep = false;
+      let lastCepHadCoverage = true;
+      let sellerCoords = [-23.55052, -46.633308];
+
+      // ============================================================
+      // UI HELPERS
+      // ============================================================
+      function showToastSeller(message, type = "ok") {
+        const toast = document.createElement("div");
+        const icon =
+          type === "warn"
+            ? "fa-triangle-exclamation text-amber-400"
+            : "fa-circle-check text-seller-green";
+        toast.className =
+          "fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl z-[9999] text-xs flex items-center space-x-2 border border-gray-700 max-w-sm";
+        toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3800);
+      }
+
+      function blockedNav(event, label) {
+        event.preventDefault();
+        showToastSeller(
+          `"${label}" fica disponível após vincular uma transportadora.`,
+          "warn"
+        );
+      }
+
+      function toggleMobileMenu(show) {
+        const overlay = document.getElementById("mobile-overlay");
+        const sidebar = document.getElementById("mobile-sidebar");
+        if (show) {
+          overlay.classList.remove("hidden");
+          sidebar.classList.remove("-translate-x-full");
+        } else {
+          overlay.classList.add("hidden");
+          sidebar.classList.add("-translate-x-full");
+        }
+      }
+
+      function fillCep(cep) {
+        document.getElementById("cep-input").value = cep;
+        buscarPorCep();
+      }
+
+      function normalizeCep(value) {
+        return (value || "").replace(/\D/g, "");
+      }
+
+      function formatCepInput(el) {
+        let digits = normalizeCep(el.value).slice(0, 8);
+        if (digits.length > 5) {
+          el.value = digits.slice(0, 5) + "-" + digits.slice(5);
+        } else {
+          el.value = digits;
+        }
+      }
+
+      document.getElementById("cep-input").addEventListener("input", function () {
+        formatCepInput(this);
+      });
+
+      function updateRadiusStyle() {
+        const slider = document.getElementById("radius-slider");
+        const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+        slider.style.setProperty("--pct", pct + "%");
+        document.getElementById("radius-val").innerText = slider.value + " KM";
+      }
+
+      function haversineKm(a, b) {
+        const toRad = (d) => (d * Math.PI) / 180;
+        const R = 6371;
+        const dLat = toRad(b[0] - a[0]);
+        const dLng = toRad(b[1] - a[1]);
+        const lat1 = toRad(a[0]);
+        const lat2 = toRad(b[0]);
+        const h =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+      }
+
+      function estimateMins(km) {
+        return Math.max(4, Math.round(km * 3.5));
+      }
+
+      // ============================================================
+      // FILTER / RENDER
+      // ============================================================
+      function enrichCarrier(c) {
+        const km = Number(haversineKm(sellerCoords, [c.lat, c.lng]).toFixed(2));
+        return { ...c, km, mins: estimateMins(km) };
+      }
+
+      function getFilteredCarriers() {
+        const radius = Number(document.getElementById("radius-slider").value);
+        const nameQuery = (document.getElementById("name-input").value || "")
+          .trim()
+          .toLowerCase();
+
+        if (!hasSearchedCep && !nameQuery) {
+          return { mode: "idle", list: [] };
+        }
+
+        if (hasSearchedCep && !lastCepHadCoverage && !nameQuery) {
+          return { mode: "no-coverage", list: [] };
+        }
+
+        let list = CARRIERS.map(enrichCarrier);
+
+        if (nameQuery) {
+          // Nome tem prioridade: busca global na base de parceiros
+          list = list.filter((c) => c.name.toLowerCase().includes(nameQuery));
+        } else if (hasSearchedCep && lastCepHadCoverage) {
+          list = list.filter((c) => c.km <= radius);
+        }
+
+        list.sort((a, b) => a.km - b.km);
+        return { mode: list.length ? "results" : "empty-filter", list };
+      }
+
+      function allCarriersForMap() {
+        return CARRIERS.map(enrichCarrier);
+      }
+
+      function renderList() {
+        const { mode, list } = getFilteredCarriers();
+        const container = document.getElementById("transportadoras-list");
+        const badge = document.getElementById("count-badge");
+        badge.textContent = String(list.length);
+
+        if (mode === "idle") {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-center py-10 px-4 text-gray-500">
+              <div class="w-14 h-14 rounded-full bg-[#121826] border border-gray-800 flex items-center justify-center mb-3">
+                <i class="fa-regular fa-map text-xl text-gray-600"></i>
+              </div>
+              <p class="text-xs leading-relaxed">
+                Digite um CEP para ver as transportadoras próximas.
+              </p>
+            </div>`;
+          syncMapMarkers(allCarriersForMap());
+          return;
+        }
+
+        if (mode === "no-coverage") {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-center py-8 px-3">
+              <div class="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-location-pin-lock text-xl text-amber-400"></i>
+              </div>
+              <p class="text-xs text-gray-200 font-medium leading-relaxed">
+                Não temos um parceiro nesta região, em breve retornaremos o contato contigo.
+              </p>
+            </div>`;
+          syncMapMarkers([]);
+          return;
+        }
+
+        if (mode === "empty-filter") {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center text-center py-8 px-3 text-gray-500">
+              <i class="fa-solid fa-filter-circle-xmark text-xl mb-3 text-gray-600"></i>
+              <p class="text-xs leading-relaxed">
+                Nenhuma transportadora encontrada com esses filtros.
+              </p>
+            </div>`;
+          syncMapMarkers([]);
+          return;
+        }
+
+        container.innerHTML = list
+          .map(
+            (c) => `
+          <div
+            class="carrier-card ${selectedId === c.id ? "active" : ""}"
+            onclick="selectCarrier('${c.id}')"
+          >
+            <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <div class="flex items-center gap-3 text-[11px] text-gray-400">
+              <span class="inline-flex items-center gap-1 text-seller-green">
+                <i class="fa-solid fa-left-right text-[10px]"></i>
+                ${c.km.toFixed(2)} km
+              </span>
+              <span class="inline-flex items-center gap-1 text-seller-green">
+                <i class="fa-regular fa-clock text-[10px]"></i>
+                ~${c.mins} min
+              </span>
+            </div>
+          </div>`
+          )
+          .join("");
+
+        syncMapMarkers(list);
+      }
+
+      function popupHtml(c) {
+        return `
+          <div class="p-3">
+            <div class="flex items-center gap-2 mb-3 pr-4">
+              <div class="w-8 h-8 rounded-lg bg-[#121826] border border-gray-700 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-box text-seller-green text-xs"></i>
+              </div>
+              <strong class="text-white text-xs leading-tight">${c.name}</strong>
+            </div>
+            <div class="space-y-2 text-[11px] text-gray-300 mb-3">
+              <div class="flex gap-2">
+                <i class="fa-solid fa-location-dot text-seller-green mt-0.5"></i>
+                <span>${c.address}</span>
+              </div>
+              <div class="flex gap-2 items-center">
+                <i class="fa-brands fa-whatsapp text-seller-green"></i>
+                <span>${c.phone}</span>
+              </div>
+              <div class="flex gap-2 items-center">
+                <i class="fa-regular fa-envelope text-seller-green"></i>
+                <span class="break-all">${c.email}</span>
+              </div>
+            </div>
+            <button
+              onclick="contratarAgora('${c.name.replace(/'/g, "\\'")}')"
+              class="w-full bg-[#74C843] hover:bg-[#5EB22F] text-white font-semibold text-xs py-2.5 rounded-lg transition-colors"
+            >
+              Contratar agora!
+            </button>
+          </div>`;
+      }
+
+      // ============================================================
+      // MAP
+      // ============================================================
+      function carrierIcon() {
+        return L.divIcon({
+          className: "",
+          html: `<div class="carrier-marker"><i class="fa-solid fa-box"></i></div>`,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+          popupAnchor: [0, -16],
+        });
+      }
+
+      function sellerIcon() {
+        return L.divIcon({
+          className: "",
+          html: `<div class="seller-marker"><i class="fa-solid fa-box"></i></div>`,
+          iconSize: [38, 38],
+          iconAnchor: [19, 19],
+        });
+      }
+
+      function initMap() {
+        if (mapInstance) {
+          mapInstance.invalidateSize();
+          return;
+        }
+
+        mapInstance = L.map("map", {
+          zoomControl: false,
+          attributionControl: true,
+        }).setView(sellerCoords, 12);
+
+        L.tileLayer(
+          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+          {
+            attribution: "&copy; OpenStreetMap &copy; CARTO",
+            maxZoom: 19,
+          }
+        ).addTo(mapInstance);
+
+        L.control.zoom({ position: "topright" }).addTo(mapInstance);
+
+        clusterGroup = L.markerClusterGroup({
+          showCoverageOnHover: false,
+          maxClusterRadius: 55,
+          iconCreateFunction: function (cluster) {
+            const count = cluster.getChildCount();
+            return L.divIcon({
+              html: `<div><span>${count}</span></div>`,
+              className: "marker-cluster-custom",
+              iconSize: L.point(40, 40),
+            });
+          },
+        });
+        mapInstance.addLayer(clusterGroup);
+
+        sellerMarker = L.marker(sellerCoords, {
+          icon: sellerIcon(),
+          zIndexOffset: 1000,
+        }).addTo(mapInstance);
+
+        syncMapMarkers(allCarriersForMap(), { fit: true });
+        setTimeout(() => mapInstance.invalidateSize(), 120);
+      }
+
+      function syncMapMarkers(list, opts = {}) {
+        if (!mapInstance || !clusterGroup) return;
+
+        clusterGroup.clearLayers();
+        markersById = {};
+
+        list.forEach((c) => {
+          const marker = L.marker([c.lat, c.lng], { icon: carrierIcon() });
+          marker.bindPopup(popupHtml(c), { maxWidth: 280 });
+          marker.on("click", () => {
+            selectedId = c.id;
+            renderListKeepScroll();
+          });
+          markersById[c.id] = marker;
+          clusterGroup.addLayer(marker);
+        });
+
+        if (sellerMarker) {
+          sellerMarker.setLatLng(sellerCoords);
+        }
+
+        if (opts.fit && list.length) {
+          const bounds = L.latLngBounds([
+            sellerCoords,
+            ...list.map((c) => [c.lat, c.lng]),
+          ]);
+          mapInstance.fitBounds(bounds.pad(0.2));
+        }
+      }
+
+      function renderListKeepScroll() {
+        const el = document.getElementById("transportadoras-list");
+        const top = el.scrollTop;
+        // Re-render only cards if we already have results; otherwise full render
+        const { mode, list } = getFilteredCarriers();
+        if (mode === "results") {
+          document.getElementById("count-badge").textContent = String(list.length);
+          el.innerHTML = list
+            .map(
+              (c) => `
+            <div
+              class="carrier-card ${selectedId === c.id ? "active" : ""}"
+              onclick="selectCarrier('${c.id}')"
+            >
+              <h4 class="font-semibold text-white text-xs tracking-wide mb-1.5">${c.name}</h4>
+              <div class="flex items-center gap-3 text-[11px] text-gray-400">
+                <span class="inline-flex items-center gap-1 text-seller-green">
+                  <i class="fa-solid fa-left-right text-[10px]"></i>
+                  ${c.km.toFixed(2)} km
+                </span>
+                <span class="inline-flex items-center gap-1 text-seller-green">
+                  <i class="fa-regular fa-clock text-[10px]"></i>
+                  ~${c.mins} min
+                </span>
+              </div>
+            </div>`
+            )
+            .join("");
+          el.scrollTop = top;
+        } else {
+          renderList();
+        }
+      }
+
+      function selectCarrier(id) {
+        selectedId = id;
+        renderListKeepScroll();
+        const marker = markersById[id];
+        if (marker && mapInstance) {
+          clusterGroup.zoomToShowLayer(marker, () => {
+            marker.openPopup();
+          });
+        }
+      }
+
+      function contratarAgora(nome) {
+        showToastSeller(
+          `Solicitação de contratação enviada para ${nome}. Em breve entraremos em contato.`
+        );
+      }
+
+      // ============================================================
+      // SEARCH ACTIONS
+      // ============================================================
+      function coordsFromCep(cepDigits) {
+        // Deterministic pseudo-geocode around SP for demo
+        const n = parseInt(cepDigits.slice(0, 5) || "1000", 10);
+        const lat = -23.45 - ((n % 250) / 1000);
+        const lng = -46.55 - ((n % 300) / 1000);
+        return [lat, lng];
+      }
+
+      function buscarPorCep() {
+        const raw = document.getElementById("cep-input").value.trim();
+        const digits = normalizeCep(raw);
+        if (digits.length < 8) {
+          showToastSeller("Informe um CEP válido com 8 dígitos.", "warn");
+          return;
+        }
+
+        hasSearchedCep = true;
+        selectedId = null;
+
+        const formatted = digits.slice(0, 5) + "-" + digits.slice(5);
+        const noCoverage =
+          CEP_SEM_COBERTURA.has(formatted) ||
+          CEP_SEM_COBERTURA.has(digits) ||
+          digits.startsWith("69") ||
+          digits.startsWith("78") ||
+          digits.startsWith("99");
+
+        lastCepHadCoverage = !noCoverage;
+
+        if (noCoverage) {
+          // Still move map somewhere "far" for demo feel
+          sellerCoords = coordsFromCep(digits);
+          if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
+          mapInstance.setView(sellerCoords, 11);
+          renderList();
+          showToastSeller("Busca concluída nesta região.", "warn");
+          return;
+        }
+
+        // Known SP demo CEP → center downtown-ish; others pseudo
+        if (digits === "01001000") {
+          sellerCoords = [-23.55052, -46.633308];
+        } else {
+          sellerCoords = coordsFromCep(digits);
+        }
+
+        if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
+        renderList();
+        const { list } = getFilteredCarriers();
+        if (list.length && mapInstance) {
+          const bounds = L.latLngBounds([
+            sellerCoords,
+            ...list.map((c) => [c.lat, c.lng]),
+          ]);
+          mapInstance.fitBounds(bounds.pad(0.25));
+        } else {
+          mapInstance.setView(sellerCoords, 12);
+        }
+        showToastSeller(`Buscando parceiras próximas ao CEP ${formatted}...`);
+      }
+
+      function onNameSearch() {
+        selectedId = null;
+        renderList();
+      }
+
+      function onRadiusChange() {
+        updateRadiusStyle();
+        if (hasSearchedCep || document.getElementById("name-input").value.trim()) {
+          selectedId = null;
+          renderList();
+        }
+      }
+
+      function limparBusca() {
+        document.getElementById("cep-input").value = "";
+        document.getElementById("name-input").value = "";
+        document.getElementById("radius-slider").value = 10;
+        updateRadiusStyle();
+        hasSearchedCep = false;
+        lastCepHadCoverage = true;
+        selectedId = null;
+        sellerCoords = [-23.55052, -46.633308];
+        if (sellerMarker) sellerMarker.setLatLng(sellerCoords);
+        renderList();
+        if (mapInstance) {
+          mapInstance.setView(sellerCoords, 12);
+        }
+        showToastSeller("Filtro de busca limpo.");
+      }
+
+      function usarLocalizacaoDemo() {
+        document.getElementById("cep-input").value = "01001-000";
+        buscarPorCep();
+      }
+
+      // ============================================================
+      // INIT
+      // ============================================================
+      window.onload = function () {
+        updateRadiusStyle();
+        renderList();
+        initMap();
+        window.addEventListener("resize", () => {
+          if (mapInstance) mapInstance.invalidateSize();
+        });
+      };
+    </script>
+  </body>
+</html>
