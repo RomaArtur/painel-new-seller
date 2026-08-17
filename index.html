@@ -1839,11 +1839,6 @@
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Fechar
             </button>
-            ${
-              operacionalImportUrl(req)
-                ? `<a href="${operacionalImportUrl(req)}" target="_blank" rel="noopener" class="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-semibold text-sm text-center">Ver no operacional</a>`
-                : ""
-            }
             <a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center">
               <i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora
             </a>
