@@ -1038,9 +1038,12 @@
 
       // ============================================================
       // VÍNCULO STORE (compartilhado com TRACKen Operacional)
-      // Mesma origem HTTP é necessária para o Operacional enxergar as solicitações.
+      // Mesmo origin (localhost / github.io) usa localStorage.
+      // Na Vercel cada projeto é outro origin: a solicitação é aberta
+      // no operacional via ?importVinculo= na URL.
       // ============================================================
       const VINCULO_STORE_KEY = "tracken_vinculo_store";
+      const VINCULO_HUB_KEY = "tracken_vinculo_hub";
       const DEMO_SELLER = {
         sellerId: "SEL-00842",
         nome: "Artur Silva",
@@ -1098,6 +1101,34 @@
 
       function saveVinculoStore(store) {
         localStorage.setItem(VINCULO_STORE_KEY, JSON.stringify(store));
+      }
+
+      function getVinculoHubUrl() {
+        return String(localStorage.getItem(VINCULO_HUB_KEY) || "").trim().replace(/\/$/, "");
+      }
+
+      function setVinculoHubUrl(url) {
+        const clean = String(url || "").trim().replace(/\/$/, "");
+        if (clean) localStorage.setItem(VINCULO_HUB_KEY, clean);
+        else localStorage.removeItem(VINCULO_HUB_KEY);
+        return clean;
+      }
+
+      function readVinculoHubFromForm() {
+        const input = document.getElementById("vinculo-hub-url");
+        if (input) setVinculoHubUrl(input.value);
+        return getVinculoHubUrl();
+      }
+
+      function encodeVinculoImport(req) {
+        return btoa(unescape(encodeURIComponent(JSON.stringify(req))));
+      }
+
+      function operacionalImportUrl(req) {
+        const hub = getVinculoHubUrl();
+        if (!hub || !req) return "";
+        const join = hub.includes("?") ? "&" : "?";
+        return `${hub}${join}importVinculo=${encodeURIComponent(encodeVinculoImport(req))}`;
       }
 
       function trackVinculoEvent(name, payload = {}) {
@@ -1763,6 +1794,17 @@
             <div class="flex justify-between gap-3"><span class="text-gray-500">Telefone</span><span class="font-medium text-gray-800 text-right">${seller.telefone}</span></div>
             <div class="flex justify-between gap-3 pt-2 border-t border-gray-200"><span class="text-gray-500">Transportadora</span><span class="font-semibold text-gray-900 text-right">${carrier.name}</span></div>
           </div>
+          <label class="block mb-5">
+            <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">URL do operacional (Vercel)</span>
+            <input
+              id="vinculo-hub-url"
+              type="url"
+              value="${getVinculoHubUrl()}"
+              placeholder="https://seu-operacional.vercel.app"
+              class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-seller-green"
+            />
+            <span class="block text-[11px] text-gray-400 mt-1">Na Vercel os painéis não compartilham dados. Informe a URL do operacional para abrir a solicitação lá.</span>
+          </label>
           <div class="flex justify-end space-x-3">
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Cancelar
@@ -1797,6 +1839,11 @@
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Fechar
             </button>
+            ${
+              operacionalImportUrl(req)
+                ? `<a href="${operacionalImportUrl(req)}" target="_blank" rel="noopener" class="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg font-semibold text-sm text-center">Ver no operacional</a>`
+                : ""
+            }
             <a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center">
               <i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora
             </a>
@@ -1807,6 +1854,7 @@
       function enviarSolicitacaoVinculo(carrierId) {
         const carrier = CARRIERS.find((c) => c.id === carrierId);
         if (!carrier) return;
+        readVinculoHubFromForm();
         const store = loadVinculoStore();
         const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
         if (existing) {
@@ -1858,7 +1906,13 @@
         renderList();
         const marker = markersById[carrier.id];
         if (marker) marker.setPopupContent(popupHtml(enrichCarrier(carrier)));
-        showToastSeller("Solicitação enviada com sucesso.");
+        const opsUrl = operacionalImportUrl(request);
+        if (opsUrl) {
+          window.open(opsUrl, "tracken_operacional");
+          showToastSeller("Solicitação enviada. Abrimos o operacional nesta solicitação.");
+        } else {
+          showToastSeller("Solicitação enviada. Informe a URL do operacional (Vercel) para ela aparecer lá.");
+        }
       }
 
       // ============================================================
