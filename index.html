@@ -477,6 +477,15 @@
         transform: scale(1);
         opacity: 1;
       }
+
+      body.solo-mode #sidebar,
+      body.solo-mode #mobile-sidebar,
+      body.solo-mode #mobile-overlay {
+        display: none !important;
+      }
+      body.solo-mode header button.md\\:hidden {
+        display: none !important;
+      }
     </style>
   </head>
   <body class="flex h-screen overflow-hidden text-sm bg-[#F3F4F6]">
@@ -2124,6 +2133,24 @@
       // INIT
       // ============================================================
       window.onload = function () {
+        const solo = new URLSearchParams(location.search).get("solo");
+        if (solo === "vinculo") {
+          document.body.classList.add("solo-mode");
+          const bar = document.createElement("div");
+          bar.id = "solo-bar";
+          bar.className =
+            "h-12 bg-[#121826] border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between shrink-0 z-30";
+          bar.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-bold text-white">TRACK<span class="text-seller-green">en</span></span>
+              <span class="text-gray-600">|</span>
+              <span class="text-sm font-medium text-gray-200 truncate">Encontrar transportadora</span>
+            </div>
+            <a href="${location.pathname}" class="text-xs text-gray-400 hover:text-white whitespace-nowrap">Abrir painel completo</a>
+          `;
+          const host = document.querySelector(".flex-1.flex.flex-col");
+          if (host) host.insertBefore(bar, host.firstChild);
+        }
         loadVinculoStore();
         consumeVinculoStatusFromUrl();
         window.addEventListener("message", (event) => {
