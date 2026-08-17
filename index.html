@@ -456,6 +456,27 @@
           max-height: min(52vh, 480px);
         }
       }
+
+      .modal-overlay {
+        transition: opacity 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal-content {
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      .modal-overlay.active .modal-content {
+        transform: scale(1);
+        opacity: 1;
+      }
     </style>
   </head>
   <body class="flex h-screen overflow-hidden text-sm bg-[#F3F4F6]">
@@ -621,6 +642,13 @@
           Demo seller sem vínculo. Demais telas liberam após contratar uma
           transportadora.
         </div>
+        <button
+          type="button"
+          onclick="resetVinculoDemoSeller()"
+          class="mt-2 w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+        >
+          <i class="fa-solid fa-rotate-right mr-2"></i> Restaurar Demo
+        </button>
       </div>
     </aside>
 
@@ -853,6 +881,26 @@
       </main>
     </div>
 
+    <!-- ===== MODAL: Solicitar vínculo ===== -->
+    <div
+      id="vinculo-modal"
+      class="modal-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+      onclick="if(event.target===this) fecharModalVinculo()"
+    >
+      <div
+        class="modal-content bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 relative"
+      >
+        <button
+          type="button"
+          onclick="fecharModalVinculo()"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+        >
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div id="vinculo-modal-body"></div>
+      </div>
+    </div>
+
     <script>
       // ============================================================
       // MOCK DATA
@@ -860,6 +908,7 @@
       const CARRIERS = [
         {
           id: "mb-flex",
+          code: "TRP-0010",
           name: "MB FLEX EXPRESS",
           address: "AV. OTAVIANO ALVES DE LIMA, 4400 - FAZENDA DO CARMO",
           phone: "(11) 98811-2200",
@@ -871,6 +920,7 @@
         },
         {
           id: "pantera",
+          code: "TRP-0011",
           name: "PANTERA ENVIOS FLEX",
           address: "RUA VOLUNTÁRIOS DA FRATERNIDADE, 112 - LAPA",
           phone: "(11) 97654-3311",
@@ -882,6 +932,7 @@
         },
         {
           id: "dimensao",
+          code: "TRP-0012",
           name: "DIMENSAO EXPRESS",
           address: "RUA DOMINGOS JORGE, 401 - VILA SOCORRO",
           phone: "(11) 98727-4808",
@@ -893,6 +944,7 @@
         },
         {
           id: "alfa",
+          code: "TRP-0013",
           name: "ALFA CARGAS & ENTREGAS",
           address: "RUA DA CONSOLAÇÃO, 2100 - CONSOLAÇÃO",
           phone: "(11) 3456-7788",
@@ -904,6 +956,7 @@
         },
         {
           id: "verde",
+          code: "TRP-0014",
           name: "VERDE TRANS EXPRESS",
           address: "AV. PAULISTA, 900 - BELA VISTA",
           phone: "(11) 3999-1010",
@@ -915,6 +968,7 @@
         },
         {
           id: "express-sp",
+          code: "TRP-0015",
           name: "EXPRESS LOGÍSTICA SP",
           address: "RUA VERGUEIRO, 1450 - PARAÍSO",
           phone: "(11) 3222-9090",
@@ -926,6 +980,7 @@
         },
         {
           id: "norte-log",
+          code: "TRP-0016",
           name: "NORTE LOG FLEX",
           address: "AV. BRAZ LEME, 1500 - SANTANA",
           phone: "(11) 98111-4455",
@@ -937,6 +992,7 @@
         },
         {
           id: "carandiru-ship",
+          code: "TRP-0017",
           name: "CARANDIRU SHIP",
           address: "RUA VOLUNTÁRIOS DA PÁTRIA, 800 - SANTANA",
           phone: "(11) 97777-1212",
@@ -948,6 +1004,7 @@
         },
         {
           id: "bom-retiro",
+          code: "TRP-0018",
           name: "BOM RETIRO CARGAS",
           address: "RUA RIBEIRO DE LIMA, 200 - BOM RETIRO",
           phone: "(11) 3333-5566",
@@ -959,6 +1016,7 @@
         },
         {
           id: "vila-maria",
+          code: "TRP-0019",
           name: "VILA MARIA ENTREGAS",
           address: "AV. GUILHERME COTCHING, 700 - VILA MARIA",
           phone: "(11) 96555-8080",
@@ -979,6 +1037,142 @@
         "99999999",
         "99999-999",
       ]);
+
+      // ============================================================
+      // VÍNCULO STORE (compartilhado com TRACKen Operacional)
+      // Mesma origem HTTP é necessária para o Operacional enxergar as solicitações.
+      // ============================================================
+      const VINCULO_STORE_KEY = "tracken_vinculo_store";
+      const DEMO_SELLER = {
+        sellerId: "SEL-00842",
+        nome: "Artur Silva",
+        empresa: "Mundo dos Eletros",
+        cnpj: "12.345.678/0001-90",
+        email: "contato@mundodoseletros.com.br",
+        telefone: "(11) 98888-0001",
+        cep: "01001-000",
+      };
+      const VINCULO_STATUS_LABEL = {
+        AGUARDANDO_ANALISE: "Aguardando análise",
+        EM_CONTATO: "Em contato",
+        APROVADA: "Aprovada",
+        RECUSADA: "Recusada",
+        CADASTRO_EM_CRIACAO: "Cadastro em criação",
+        CONCLUIDA: "Concluída",
+      };
+
+      function emptyVinculoStore() {
+        return {
+          seller: { ...DEMO_SELLER },
+          requests: [],
+          customers: [],
+          logins: [],
+          events: [],
+        };
+      }
+
+      function loadVinculoStore() {
+        const raw = localStorage.getItem(VINCULO_STORE_KEY);
+        if (!raw) {
+          const store = emptyVinculoStore();
+          store.events.push({
+            event: "seller_account_created",
+            at: new Date().toISOString(),
+            payload: { sellerId: DEMO_SELLER.sellerId },
+          });
+          saveVinculoStore(store);
+          return store;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (!parsed.seller) parsed.seller = { ...DEMO_SELLER };
+          parsed.requests = parsed.requests || [];
+          parsed.customers = parsed.customers || [];
+          parsed.logins = parsed.logins || [];
+          parsed.events = parsed.events || [];
+          return parsed;
+        } catch (e) {
+          const store = emptyVinculoStore();
+          saveVinculoStore(store);
+          return store;
+        }
+      }
+
+      function saveVinculoStore(store) {
+        localStorage.setItem(VINCULO_STORE_KEY, JSON.stringify(store));
+      }
+
+      function trackVinculoEvent(name, payload = {}) {
+        const store = loadVinculoStore();
+        store.events.push({
+          event: name,
+          at: new Date().toISOString(),
+          payload,
+        });
+        saveVinculoStore(store);
+        return store;
+      }
+
+      function nextVinculoId(prefix, list, field, start) {
+        let max = start - 1;
+        (list || []).forEach((item) => {
+          const n = parseInt(String(item[field] || "").replace(/\D/g, ""), 10);
+          if (!Number.isNaN(n) && n > max) max = n;
+        });
+        return `${prefix}-${String(max + 1).padStart(5, "0")}`;
+      }
+
+      function findOpenRequest(store, sellerId, carrierId) {
+        return (store.requests || []).find(
+          (r) =>
+            r.sellerId === sellerId &&
+            r.carrierId === carrierId &&
+            r.status !== "RECUSADA"
+        );
+      }
+
+      function phoneToWa(phone) {
+        const digits = String(phone || "").replace(/\D/g, "");
+        if (!digits) return "https://wa.me/5511999999999";
+        const withCountry = digits.startsWith("55") ? digits : "55" + digits;
+        return `https://wa.me/${withCountry}`;
+      }
+
+      function nowIso() {
+        return new Date().toISOString();
+      }
+
+      function formatDateTimePt(iso) {
+        const d = iso ? new Date(iso) : new Date();
+        return d.toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      let pendingVinculoCarrierId = null;
+
+      function resetVinculoDemoSeller() {
+        const store = emptyVinculoStore();
+        store.events.push({
+          event: "seller_account_created",
+          at: nowIso(),
+          payload: { sellerId: DEMO_SELLER.sellerId },
+        });
+        saveVinculoStore(store);
+        pendingVinculoCarrierId = null;
+        fecharModalVinculo();
+        renderList();
+        if (selectedId && markersById[selectedId]) {
+          markersById[selectedId].setPopupContent(
+            popupHtml(carriersById[selectedId] || enrichCarrier(CARRIERS.find((c) => c.id === selectedId) || {}))
+          );
+        }
+        showToastSeller("Demonstração restaurada. Solicitações de vínculo foram limpas.");
+      }
 
       let mapInstance = null;
       let clusterGroup = null;
@@ -1113,6 +1307,35 @@
         return CARRIERS.map(enrichCarrier);
       }
 
+      function requestChipHtml(carrierId) {
+        const store = loadVinculoStore();
+        const req = findOpenRequest(store, store.seller.sellerId, carrierId);
+        if (!req) return "";
+        const label = VINCULO_STATUS_LABEL[req.status] || req.status;
+        return `<div class="mt-1.5 text-[10px] font-semibold text-amber-200">${label}</div>`;
+      }
+
+      function carrierListCardHtml(c) {
+        return `
+          <div
+            class="carrier-card ${selectedId === c.id ? "active" : ""}"
+            onclick="selectCarrier('${c.id}')"
+          >
+            <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="meta-accent inline-flex items-center gap-1">
+                <i class="fa-solid fa-left-right text-[10px]"></i>
+                ${c.km.toFixed(2)} km
+              </span>
+              <span class="meta-accent inline-flex items-center gap-1">
+                <i class="fa-regular fa-clock text-[10px]"></i>
+                ~${c.mins} min
+              </span>
+            </div>
+            ${requestChipHtml(c.id)}
+          </div>`;
+      }
+
       function renderList() {
         const { mode, list } = getFilteredCarriers();
         const container = document.getElementById("transportadoras-list");
@@ -1162,33 +1385,44 @@
           return;
         }
 
-        container.innerHTML = list
-          .map(
-            (c) => `
-          <div
-            class="carrier-card ${selectedId === c.id ? "active" : ""}"
-            onclick="selectCarrier('${c.id}')"
-          >
-            <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
-            <div class="flex items-center gap-3 text-[11px]">
-              <span class="meta-accent inline-flex items-center gap-1">
-                <i class="fa-solid fa-left-right text-[10px]"></i>
-                ${c.km.toFixed(2)} km
-              </span>
-              <span class="meta-accent inline-flex items-center gap-1">
-                <i class="fa-regular fa-clock text-[10px]"></i>
-                ~${c.mins} min
-              </span>
-            </div>
-          </div>`
-          )
-          .join("");
+        container.innerHTML = list.map((c) => carrierListCardHtml(c)).join("");
 
         syncMapMarkers(list);
       }
 
       function popupHtml(c) {
-        const safeName = String(c.name).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        const store = loadVinculoStore();
+        const req = findOpenRequest(store, store.seller.sellerId, c.id);
+        const statusLabel = req
+          ? VINCULO_STATUS_LABEL[req.status] || req.status
+          : "";
+        const phoneRow = req
+          ? `<a href="${phoneToWa(c.phone)}" target="_blank" rel="noopener" style="display:flex;gap:8px;align-items:center;color:#d1d5db;text-decoration:none;">
+                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
+                <span>${c.phone}</span>
+              </a>`
+          : `<div style="display:flex;gap:8px;align-items:center;">
+                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
+                <span>${c.phone}</span>
+              </div>`;
+        const cta = req
+          ? `<button
+                type="button"
+                disabled
+                style="width:100%;background:#374151;color:#e5e7eb;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:default;"
+              >
+                Solicitação enviada
+              </button>
+              <div style="margin-top:8px;text-align:center;font-size:11px;color:#fbbf24;font-weight:600;">
+                ${statusLabel}
+              </div>`
+          : `<button
+                type="button"
+                onclick="event.stopPropagation();abrirModalVinculo('${c.id}')"
+                style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;"
+              >
+                Solicitar vínculo
+              </button>`;
         return `
           <div class="carrier-popup-wrap" style="width:260px;background:#171E2E;color:#fff;">
             <div style="display:flex;align-items:center;gap:10px;padding:14px 36px 10px 14px;border-bottom:1px solid #2a3347;">
@@ -1202,23 +1436,14 @@
                 <i class="fa-solid fa-location-dot" style="color:#74C843;margin-top:2px;"></i>
                 <span>${c.address}</span>
               </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
-                <span>${c.phone}</span>
-              </div>
+              ${phoneRow}
               <div style="display:flex;gap:8px;align-items:center;">
                 <i class="fa-regular fa-envelope" style="color:#74C843;"></i>
                 <span style="word-break:break-all;">${c.email}</span>
               </div>
             </div>
             <div style="padding:0 14px 14px;">
-              <button
-                type="button"
-                onclick="contratarAgora('${safeName}')"
-                style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;"
-              >
-                Contratar agora!
-              </button>
+              ${cta}
             </div>
           </div>`;
       }
@@ -1367,27 +1592,7 @@
         const el = document.getElementById("transportadoras-list");
         const top = el.scrollTop;
         document.getElementById("count-badge").textContent = String(list.length);
-        el.innerHTML = list
-          .map(
-            (c) => `
-          <div
-            class="carrier-card ${selectedId === c.id ? "active" : ""}"
-            onclick="selectCarrier('${c.id}')"
-          >
-            <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
-            <div class="flex items-center gap-3 text-[11px]">
-              <span class="meta-accent inline-flex items-center gap-1">
-                <i class="fa-solid fa-left-right text-[10px]"></i>
-                ${c.km.toFixed(2)} km
-              </span>
-              <span class="meta-accent inline-flex items-center gap-1">
-                <i class="fa-regular fa-clock text-[10px]"></i>
-                ~${c.mins} min
-              </span>
-            </div>
-          </div>`
-          )
-          .join("");
+        el.innerHTML = list.map((c) => carrierListCardHtml(c)).join("");
         el.scrollTop = top;
 
         Object.keys(markersById).forEach((id) => {
@@ -1466,6 +1671,11 @@
             selectedId = c.id;
             highlightListSelection();
             drawRouteToCarrier(c);
+            trackVinculoEvent("carrier_viewed", {
+              carrierId: c.id,
+              carrierCode: c.code || null,
+              carrierName: c.name || null,
+            });
             // Garante abertura mesmo com cluster / re-bind
             setTimeout(() => marker.openPopup(), 0);
           });
@@ -1495,6 +1705,11 @@
           enrichCarrier(CARRIERS.find((c) => c.id === id) || {});
         highlightListSelection();
         if (carrier?.lat) drawRouteToCarrier(carrier);
+        trackVinculoEvent("carrier_viewed", {
+          carrierId: id,
+          carrierCode: carrier.code || null,
+          carrierName: carrier.name || null,
+        });
 
         const marker = markersById[id];
         if (marker && mapInstance) {
@@ -1504,10 +1719,148 @@
         }
       }
 
-      function contratarAgora(nome) {
-        showToastSeller(
-          `Solicitação de contratação enviada para ${nome}. Em breve entraremos em contato.`
-        );
+      function abrirModalVinculo(carrierId) {
+        const carrier = CARRIERS.find((c) => c.id === carrierId);
+        if (!carrier) return;
+        const store = loadVinculoStore();
+        const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
+        pendingVinculoCarrierId = carrierId;
+        if (existing) {
+          renderVinculoModalSuccess(existing, carrier);
+        } else {
+          trackVinculoEvent("carrier_link_requested", {
+            sellerId: store.seller.sellerId,
+            carrierId: carrier.id,
+            carrierCode: carrier.code,
+          });
+          renderVinculoModalConfirm(carrier, store.seller);
+        }
+        document.getElementById("vinculo-modal").classList.add("active");
+      }
+
+      function fecharModalVinculo() {
+        document.getElementById("vinculo-modal").classList.remove("active");
+        pendingVinculoCarrierId = null;
+      }
+
+      function renderVinculoModalConfirm(carrier, seller) {
+        document.getElementById("vinculo-modal-body").innerHTML = `
+          <div class="flex items-center space-x-3 mb-4 pr-8">
+            <div class="w-10 h-10 rounded-xl bg-seller-green/10 text-seller-green flex items-center justify-center">
+              <i class="fa-solid fa-link text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base">Solicitar vínculo</h3>
+              <p class="text-xs text-gray-500">Envio dos dados já cadastrados</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 leading-relaxed mb-4">
+            Seus dados cadastrados serão enviados para esta transportadora para que ela possa analisar sua solicitação e entrar em contato com você.
+          </p>
+          <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 space-y-2 text-xs">
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Nome</span><span class="font-medium text-gray-800 text-right">${seller.nome}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Empresa</span><span class="font-medium text-gray-800 text-right">${seller.empresa}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">CNPJ</span><span class="font-medium text-gray-800 text-right">${seller.cnpj || "—"}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">E-mail</span><span class="font-medium text-gray-800 text-right">${seller.email}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Telefone</span><span class="font-medium text-gray-800 text-right">${seller.telefone}</span></div>
+            <div class="flex justify-between gap-3 pt-2 border-t border-gray-200"><span class="text-gray-500">Transportadora</span><span class="font-semibold text-gray-900 text-right">${carrier.name}</span></div>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
+              Cancelar
+            </button>
+            <button type="button" onclick="enviarSolicitacaoVinculo('${carrier.id}')" class="px-4 py-2 bg-seller-green hover:bg-seller-greenDark text-white rounded-lg font-semibold text-sm">
+              Enviar solicitação
+            </button>
+          </div>
+        `;
+      }
+
+      function renderVinculoModalSuccess(req, carrier) {
+        document.getElementById("vinculo-modal-body").innerHTML = `
+          <div class="flex items-center space-x-3 mb-4 pr-8">
+            <div class="w-10 h-10 rounded-xl bg-seller-green/10 text-seller-green flex items-center justify-center">
+              <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900 text-base">Solicitação enviada com sucesso</h3>
+              <p class="text-xs text-gray-500">Aguardando análise da transportadora</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 leading-relaxed mb-4">
+            A transportadora recebeu seus dados e poderá entrar em contato com você para dar continuidade ao processo.
+          </p>
+          <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 space-y-2 text-xs">
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="font-semibold text-amber-600">${VINCULO_STATUS_LABEL[req.status] || req.status}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Protocolo</span><span class="font-medium text-gray-800">${req.requestId}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Transportadora</span><span class="font-medium text-gray-800 text-right">${carrier.name}</span></div>
+          </div>
+          <div class="flex flex-col sm:flex-row justify-end gap-2">
+            <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
+              Fechar
+            </button>
+            <a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center">
+              <i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora
+            </a>
+          </div>
+        `;
+      }
+
+      function enviarSolicitacaoVinculo(carrierId) {
+        const carrier = CARRIERS.find((c) => c.id === carrierId);
+        if (!carrier) return;
+        const store = loadVinculoStore();
+        const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
+        if (existing) {
+          renderVinculoModalSuccess(existing, carrier);
+          return;
+        }
+        const createdAt = nowIso();
+        const request = {
+          requestId: nextVinculoId("SOL", store.requests, "requestId", 10428),
+          sellerId: store.seller.sellerId,
+          carrierId: carrier.id,
+          carrierCode: carrier.code,
+          carrierName: carrier.name,
+          carrierPhone: carrier.phone,
+          status: "AGUARDANDO_ANALISE",
+          createdAt,
+          updatedAt: createdAt,
+          sellerSnapshot: {
+            nome: store.seller.nome,
+            empresa: store.seller.empresa,
+            cnpj: store.seller.cnpj,
+            email: store.seller.email,
+            telefone: store.seller.telefone,
+            cep: store.seller.cep,
+          },
+          carrierCustomerId: null,
+          carrierLoginId: null,
+          historico: [
+            {
+              at: createdAt,
+              action: "Solicitação de vínculo enviada pelo Seller",
+              type: "seller",
+            },
+          ],
+        };
+        store.requests.push(request);
+        store.events.push({
+          event: "carrier_link_request_submitted",
+          at: createdAt,
+          payload: {
+            sellerId: request.sellerId,
+            requestId: request.requestId,
+            carrierId: request.carrierId,
+            carrierCode: request.carrierCode,
+          },
+        });
+        saveVinculoStore(store);
+        renderVinculoModalSuccess(request, carrier);
+        renderList();
+        const marker = markersById[carrier.id];
+        if (marker) marker.setPopupContent(popupHtml(enrichCarrier(carrier)));
+        showToastSeller("Solicitação enviada com sucesso.");
       }
 
       // ============================================================
@@ -1619,6 +1972,10 @@
       // INIT
       // ============================================================
       window.onload = function () {
+        loadVinculoStore();
+        trackVinculoEvent("carrier_search_viewed", {
+          sellerId: DEMO_SELLER.sellerId,
+        });
         updateRadiusStyle();
         renderList();
         initMap();
