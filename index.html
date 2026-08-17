@@ -1160,6 +1160,92 @@
         );
       }
 
+      function findLatestRequest(store, sellerId, carrierId) {
+        return [...(store.requests || [])]
+          .filter((r) => r.sellerId === sellerId && r.carrierId === carrierId)
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt || b.createdAt) -
+              new Date(a.updatedAt || a.createdAt)
+          )[0] || null;
+      }
+
+      function getSellerReturnUrl() {
+        return (
+          location.origin +
+          location.pathname.replace(/index\.html$/i, "")
+        ).replace(/\/$/, "");
+      }
+
+      function vinculoStatusColorClass(status) {
+        switch (status) {
+          case "RECUSADA":
+            return "text-red-500";
+          case "APROVADA":
+          case "CONCLUIDA":
+            return "text-emerald-600";
+          case "CADASTRO_EM_CRIACAO":
+            return "text-orange-500";
+          case "EM_CONTATO":
+            return "text-blue-600";
+          default:
+            return "text-amber-600";
+        }
+      }
+
+      function applyVinculoStatusUpdate(partial) {
+        if (!partial || !partial.requestId) return false;
+        const store = loadVinculoStore();
+        const idx = store.requests.findIndex((r) => r.requestId === partial.requestId);
+        if (idx >= 0) {
+          store.requests[idx] = { ...store.requests[idx], ...partial };
+        } else if (partial.carrierId) {
+          store.requests.push(partial);
+        } else {
+          return false;
+        }
+        saveVinculoStore(store);
+        refreshVinculoSellerUi();
+        const label = VINCULO_STATUS_LABEL[partial.status] || partial.status;
+        if (label) showToastSeller(`Status da análise: ${label}`);
+        return true;
+      }
+
+      function consumeVinculoStatusFromUrl() {
+        const params = new URLSearchParams(location.search);
+        const packed = params.get("vinculoStatus");
+        if (!packed) return false;
+        try {
+          const partial = JSON.parse(decodeURIComponent(escape(atob(packed))));
+          applyVinculoStatusUpdate(partial);
+        } catch (e) {
+          return false;
+        }
+        const url = new URL(location.href);
+        url.searchParams.delete("vinculoStatus");
+        history.replaceState({}, "", url.pathname + url.search + url.hash);
+        return true;
+      }
+
+      function refreshVinculoSellerUi() {
+        renderList();
+        if (selectedId && markersById[selectedId]) {
+          const carrier =
+            carriersById[selectedId] ||
+            enrichCarrier(CARRIERS.find((c) => c.id === selectedId) || {});
+          markersById[selectedId].setPopupContent(popupHtml(carrier));
+        }
+        if (!pendingVinculoCarrierId) return;
+        const modal = document.getElementById("vinculo-modal");
+        if (!modal || !modal.classList.contains("active")) return;
+        const carrier = CARRIERS.find((c) => c.id === pendingVinculoCarrierId);
+        const store = loadVinculoStore();
+        const req =
+          findOpenRequest(store, store.seller.sellerId, pendingVinculoCarrierId) ||
+          findLatestRequest(store, store.seller.sellerId, pendingVinculoCarrierId);
+        if (carrier && req) renderVinculoModalSuccess(req, carrier);
+      }
+
       function phoneToWa(phone) {
         const digits = String(phone || "").replace(/\D/g, "");
         if (!digits) return "https://wa.me/5511999999999";
@@ -1338,10 +1424,18 @@
 
       function requestChipHtml(carrierId) {
         const store = loadVinculoStore();
-        const req = findOpenRequest(store, store.seller.sellerId, carrierId);
+        const req = findLatestRequest(store, store.seller.sellerId, carrierId);
         if (!req) return "";
         const label = VINCULO_STATUS_LABEL[req.status] || req.status;
-        return `<div class="mt-1.5 text-[10px] font-semibold text-amber-200">${label}</div>`;
+        const color =
+          req.status === "RECUSADA"
+            ? "text-red-300"
+            : req.status === "CONCLUIDA" || req.status === "APROVADA"
+              ? "text-emerald-300"
+              : req.status === "EM_CONTATO"
+                ? "text-sky-300"
+                : "text-amber-200";
+        return `<div class="mt-1.5 text-[10px] font-semibold ${color}">${label}</div>`;
       }
 
       function carrierListCardHtml(c) {
@@ -1831,9 +1925,18 @@
             A transportadora recebeu seus dados e poderá entrar em contato com você para dar continuidade ao processo.
           </p>
           <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 space-y-2 text-xs">
-            <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="font-semibold text-amber-600">${VINCULO_STATUS_LABEL[req.status] || req.status}</span></div>
+            <div class="flex justify-between gap-3"><span class="text-gray-500">Status</span><span class="font-semibold ${vinculoStatusColorClass(req.status)}">${VINCULO_STATUS_LABEL[req.status] || req.status}</span></div>
             <div class="flex justify-between gap-3"><span class="text-gray-500">Protocolo</span><span class="font-medium text-gray-800">${req.requestId}</span></div>
             <div class="flex justify-between gap-3"><span class="text-gray-500">Transportadora</span><span class="font-medium text-gray-800 text-right">${carrier.name}</span></div>
+            ${(req.historico || [])
+              .slice()
+              .reverse()
+              .slice(0, 4)
+              .map(
+                (item) =>
+                  `<div class="pt-2 border-t border-gray-200"><div class="text-gray-400">${formatDateTimePt(item.at)}</div><div class="text-gray-700">${item.action}</div></div>`
+              )
+              .join("")}
           </div>
           <div class="flex flex-col sm:flex-row justify-end gap-2">
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
@@ -1877,6 +1980,8 @@
           },
           carrierCustomerId: null,
           carrierLoginId: null,
+          sellerReturnUrl: getSellerReturnUrl(),
+          sellerReturnOrigin: location.origin,
           historico: [
             {
               at: createdAt,
@@ -2020,6 +2125,16 @@
       // ============================================================
       window.onload = function () {
         loadVinculoStore();
+        consumeVinculoStatusFromUrl();
+        window.addEventListener("message", (event) => {
+          const data = event.data;
+          if (!data || data.channel !== "tracken-vinculo" || data.type !== "status") return;
+          applyVinculoStatusUpdate(data.request);
+        });
+        window.addEventListener("storage", (event) => {
+          if (event.key !== VINCULO_STORE_KEY) return;
+          refreshVinculoSellerUi();
+        });
         trackVinculoEvent("carrier_search_viewed", {
           sellerId: DEMO_SELLER.sellerId,
         });
