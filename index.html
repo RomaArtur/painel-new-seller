@@ -497,7 +497,7 @@
       <div class="h-16 flex items-center px-5 border-b border-gray-100">
         <div class="flex items-center">
           <img
-            src="logo_cinza.png"
+            src="imgi_1_seller.png"
             alt="TRACKen New Seller"
             class="h-10 w-auto object-contain"
           />
@@ -676,7 +676,7 @@
         class="h-16 flex items-center justify-between px-5 border-b border-gray-100"
       >
         <img
-          src="logo_cinza.png"
+          src="imgi_1_seller.png"
           alt="TRACKen New Seller"
           class="h-9 w-auto object-contain"
         />
@@ -1052,11 +1052,8 @@
       // o Seller não precise conhecer ou preencher uma URL técnica.
       // ============================================================
       const VINCULO_STORE_KEY = "tracken_vinculo_store";
-      const VINCULO_HUB_KEY = "tracken_vinculo_hub";
-      const DEFAULT_VINCULO_HUB_URL = new URL(
-        "../painel-transportadora/",
-        location.href,
-      ).href.replace(/\/$/, "");
+      const DEFAULT_VINCULO_HUB_URL =
+        "https://painel-operacional-tracken.vercel.app";
       const DEMO_SELLER = {
         sellerId: "SEL-00842",
         nome: "Artur Silva",
@@ -1118,18 +1115,7 @@
       }
 
       function getVinculoHubUrl() {
-        return String(
-          localStorage.getItem(VINCULO_HUB_KEY) || DEFAULT_VINCULO_HUB_URL,
-        )
-          .trim()
-          .replace(/\/$/, "");
-      }
-
-      function setVinculoHubUrl(url) {
-        const clean = String(url || "").trim().replace(/\/$/, "");
-        if (clean) localStorage.setItem(VINCULO_HUB_KEY, clean);
-        else localStorage.removeItem(VINCULO_HUB_KEY);
-        return clean;
+        return DEFAULT_VINCULO_HUB_URL;
       }
 
       function encodeVinculoImport(req) {
@@ -2131,8 +2117,8 @@
         if (marker) marker.setPopupContent(popupHtml(enrichCarrier(carrier)));
         const opsUrl = operacionalImportUrl(request);
         if (opsUrl) {
-          window.open(opsUrl, "tracken_operacional");
-          showToastSeller("Solicitação de cadastro enviada com sucesso.");
+          showToastSeller("Solicitação enviada. Abrindo o operacional.");
+          window.location.assign(opsUrl);
         } else {
           showToastSeller("Solicitação de cadastro enviada com sucesso.");
         }

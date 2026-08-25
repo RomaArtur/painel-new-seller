@@ -184,7 +184,10 @@
       }
 
       function syncWithOperational(request) {
-        const operational = new URL("../../../painel-transportadora/", location.href);
+        const operational = new URL(
+          "/",
+          "https://painel-operacional-tracken.vercel.app",
+        );
         operational.searchParams.set("importVinculo", encodeRequest(request));
         document.getElementById("ops-sync-frame").src = operational.href;
       }
