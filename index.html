@@ -888,7 +888,7 @@
       </main>
     </div>
 
-    <!-- ===== MODAL: Solicitar vínculo ===== -->
+    <!-- ===== MODAL: Solicitar cadastro ===== -->
     <div
       id="vinculo-modal"
       class="modal-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
@@ -1047,12 +1047,15 @@
 
       // ============================================================
       // VÍNCULO STORE (compartilhado com TRACKen Operacional)
-      // Mesmo origin (localhost / github.io) usa localStorage.
-      // Na Vercel cada projeto é outro origin: a solicitação é aberta
-      // no operacional via ?importVinculo= na URL.
+      // O endereço do operacional fica configurado internamente para que
+      // o Seller não precise conhecer ou preencher uma URL técnica.
       // ============================================================
       const VINCULO_STORE_KEY = "tracken_vinculo_store";
       const VINCULO_HUB_KEY = "tracken_vinculo_hub";
+      const DEFAULT_VINCULO_HUB_URL = new URL(
+        "../painel-transportadora/",
+        location.href,
+      ).href.replace(/\/$/, "");
       const DEMO_SELLER = {
         sellerId: "SEL-00842",
         nome: "Artur Silva",
@@ -1113,7 +1116,11 @@
       }
 
       function getVinculoHubUrl() {
-        return String(localStorage.getItem(VINCULO_HUB_KEY) || "").trim().replace(/\/$/, "");
+        return String(
+          localStorage.getItem(VINCULO_HUB_KEY) || DEFAULT_VINCULO_HUB_URL,
+        )
+          .trim()
+          .replace(/\/$/, "");
       }
 
       function setVinculoHubUrl(url) {
@@ -1121,12 +1128,6 @@
         if (clean) localStorage.setItem(VINCULO_HUB_KEY, clean);
         else localStorage.removeItem(VINCULO_HUB_KEY);
         return clean;
-      }
-
-      function readVinculoHubFromForm() {
-        const input = document.getElementById("vinculo-hub-url");
-        if (input) setVinculoHubUrl(input.value);
-        return getVinculoHubUrl();
       }
 
       function encodeVinculoImport(req) {
@@ -1543,7 +1544,7 @@
                 disabled
                 style="width:100%;background:#374151;color:#e5e7eb;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:default;"
               >
-                Solicitação enviada
+                Cadastro solicitado
               </button>
               <div style="margin-top:8px;text-align:center;font-size:11px;color:#fbbf24;font-weight:600;">
                 ${statusLabel}
@@ -1553,7 +1554,7 @@
                 onclick="event.stopPropagation();abrirModalVinculo('${c.id}')"
                 style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;"
               >
-                Solicitar vínculo
+                Solicitar cadastro
               </button>`;
         return `
           <div class="carrier-popup-wrap" style="width:260px;background:#171E2E;color:#fff;">
@@ -1875,48 +1876,128 @@
         pendingVinculoCarrierId = null;
       }
 
-      function renderVinculoModalConfirm(carrier, seller) {
+      function escapeVinculoValue(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderVinculoModalConfirm(carrier, seller, editing = false) {
+        const documento = seller.documento || seller.cnpj || "";
+        const sellerFields = editing
+          ? `
+            <form id="vinculo-seller-edit-form" class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3" onsubmit="event.preventDefault();salvarDadosVinculo('${carrier.id}')">
+              <label class="sm:col-span-2 text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                Nome completo
+                <input id="vinculo-edit-nome" required value="${escapeVinculoValue(seller.nome)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <label class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                Empresa
+                <input id="vinculo-edit-empresa" required value="${escapeVinculoValue(seller.empresa)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <label class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                CPF/CNPJ
+                <input id="vinculo-edit-documento" required value="${escapeVinculoValue(documento)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <label class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                E-mail
+                <input id="vinculo-edit-email" type="email" required value="${escapeVinculoValue(seller.email)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <label class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                WhatsApp
+                <input id="vinculo-edit-telefone" required value="${escapeVinculoValue(seller.telefone)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <label class="sm:col-span-2 text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
+                CEP
+                <input id="vinculo-edit-cep" required value="${escapeVinculoValue(seller.cep)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
+              </label>
+              <div class="sm:col-span-2 flex justify-end gap-2 pt-1">
+                <button type="button" onclick="cancelarEdicaoVinculo('${carrier.id}')" class="px-3 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-white font-medium text-xs">Cancelar edição</button>
+                <button type="submit" class="px-3 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-lg font-semibold text-xs">
+                  <i class="fa-solid fa-check mr-1.5"></i>Salvar alterações
+                </button>
+              </div>
+            </form>
+          `
+          : `
+            <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 space-y-2 text-xs">
+              <div class="flex items-center justify-between gap-3 pb-2 mb-1 border-b border-gray-200">
+                <span class="font-semibold text-gray-700">Dados que serão enviados</span>
+                <button type="button" onclick="editarDadosVinculo('${carrier.id}')" class="text-seller-green hover:text-seller-greenDark font-semibold inline-flex items-center">
+                  <i class="fa-solid fa-pen mr-1.5"></i>Editar dados
+                </button>
+              </div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">Nome</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.nome)}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">Empresa</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.empresa)}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">CPF/CNPJ</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(documento) || "—"}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">E-mail</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.email)}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">WhatsApp</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.telefone)}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">CEP</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.cep)}</span></div>
+              <div class="flex justify-between gap-3 pt-2 border-t border-gray-200"><span class="text-gray-500">Transportadora</span><span class="font-semibold text-gray-900 text-right">${escapeVinculoValue(carrier.name)}</span></div>
+            </div>
+          `;
         document.getElementById("vinculo-modal-body").innerHTML = `
           <div class="flex items-center space-x-3 mb-4 pr-8">
             <div class="w-10 h-10 rounded-xl bg-seller-green/10 text-seller-green flex items-center justify-center">
-              <i class="fa-solid fa-link text-lg"></i>
+              <i class="fa-solid fa-file-signature text-lg"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-900 text-base">Solicitar vínculo</h3>
-              <p class="text-xs text-gray-500">Envio dos dados já cadastrados</p>
+              <h3 class="font-bold text-gray-900 text-base">Solicitar cadastro</h3>
+              <p class="text-xs text-gray-500">Revise os dados antes do envio</p>
             </div>
           </div>
           <p class="text-sm text-gray-600 leading-relaxed mb-4">
-            Seus dados cadastrados serão enviados para esta transportadora para que ela possa analisar sua solicitação e entrar em contato com você.
+            Seus dados serão enviados para esta transportadora analisar seu cadastro e entrar em contato com você.
           </p>
-          <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-5 space-y-2 text-xs">
-            <div class="flex justify-between gap-3"><span class="text-gray-500">Nome</span><span class="font-medium text-gray-800 text-right">${seller.nome}</span></div>
-            <div class="flex justify-between gap-3"><span class="text-gray-500">Empresa</span><span class="font-medium text-gray-800 text-right">${seller.empresa}</span></div>
-            <div class="flex justify-between gap-3"><span class="text-gray-500">CNPJ</span><span class="font-medium text-gray-800 text-right">${seller.cnpj || "—"}</span></div>
-            <div class="flex justify-between gap-3"><span class="text-gray-500">E-mail</span><span class="font-medium text-gray-800 text-right">${seller.email}</span></div>
-            <div class="flex justify-between gap-3"><span class="text-gray-500">Telefone</span><span class="font-medium text-gray-800 text-right">${seller.telefone}</span></div>
-            <div class="flex justify-between gap-3 pt-2 border-t border-gray-200"><span class="text-gray-500">Transportadora</span><span class="font-semibold text-gray-900 text-right">${carrier.name}</span></div>
-          </div>
-          <label class="block mb-5">
-            <span class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">URL do operacional (Vercel)</span>
-            <input
-              id="vinculo-hub-url"
-              type="url"
-              value="${getVinculoHubUrl()}"
-              placeholder="https://seu-operacional.vercel.app"
-              class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-seller-green"
-            />
-            <span class="block text-[11px] text-gray-400 mt-1">Na Vercel os painéis não compartilham dados. Informe a URL do operacional para abrir a solicitação lá.</span>
-          </label>
-          <div class="flex justify-end space-x-3">
+          ${sellerFields}
+          <div class="${editing ? "hidden" : "flex"} justify-end space-x-3">
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Cancelar
             </button>
             <button type="button" onclick="enviarSolicitacaoVinculo('${carrier.id}')" class="px-4 py-2 bg-seller-green hover:bg-seller-greenDark text-white rounded-lg font-semibold text-sm">
-              Enviar solicitação
+              Solicitar cadastro
             </button>
           </div>
         `;
+      }
+
+      function editarDadosVinculo(carrierId) {
+        const carrier = CARRIERS.find((item) => item.id === carrierId);
+        if (!carrier) return;
+        const store = loadVinculoStore();
+        renderVinculoModalConfirm(carrier, store.seller, true);
+      }
+
+      function cancelarEdicaoVinculo(carrierId) {
+        const carrier = CARRIERS.find((item) => item.id === carrierId);
+        if (!carrier) return;
+        const store = loadVinculoStore();
+        renderVinculoModalConfirm(carrier, store.seller, false);
+      }
+
+      function salvarDadosVinculo(carrierId) {
+        const form = document.getElementById("vinculo-seller-edit-form");
+        if (!form || !form.reportValidity()) return;
+        const carrier = CARRIERS.find((item) => item.id === carrierId);
+        if (!carrier) return;
+        const store = loadVinculoStore();
+        const documento = document.getElementById("vinculo-edit-documento").value.trim();
+        store.seller = {
+          ...store.seller,
+          nome: document.getElementById("vinculo-edit-nome").value.trim(),
+          empresa: document.getElementById("vinculo-edit-empresa").value.trim(),
+          documento,
+          cnpj: documento,
+          email: document.getElementById("vinculo-edit-email").value.trim(),
+          telefone: document.getElementById("vinculo-edit-telefone").value.trim(),
+          cep: document.getElementById("vinculo-edit-cep").value.trim(),
+        };
+        saveVinculoStore(store);
+        renderVinculoModalConfirm(carrier, store.seller, false);
+        showToastSeller("Dados atualizados para a solicitação de cadastro.");
       }
 
       function renderVinculoModalSuccess(req, carrier) {
@@ -1926,7 +2007,7 @@
               <i class="fa-solid fa-circle-check text-lg"></i>
             </div>
             <div>
-              <h3 class="font-bold text-gray-900 text-base">Solicitação enviada com sucesso</h3>
+              <h3 class="font-bold text-gray-900 text-base">Solicitação de cadastro enviada</h3>
               <p class="text-xs text-gray-500">Aguardando análise da transportadora</p>
             </div>
           </div>
@@ -1961,7 +2042,6 @@
       function enviarSolicitacaoVinculo(carrierId) {
         const carrier = CARRIERS.find((c) => c.id === carrierId);
         if (!carrier) return;
-        readVinculoHubFromForm();
         const store = loadVinculoStore();
         const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
         if (existing) {
@@ -1982,6 +2062,7 @@
           sellerSnapshot: {
             nome: store.seller.nome,
             empresa: store.seller.empresa,
+            documento: store.seller.documento || store.seller.cnpj,
             cnpj: store.seller.cnpj,
             email: store.seller.email,
             telefone: store.seller.telefone,
@@ -1994,7 +2075,7 @@
           historico: [
             {
               at: createdAt,
-              action: "Solicitação de vínculo enviada pelo Seller",
+              action: "Solicitação de cadastro enviada pelo Seller",
               type: "seller",
             },
           ],
@@ -2018,9 +2099,9 @@
         const opsUrl = operacionalImportUrl(request);
         if (opsUrl) {
           window.open(opsUrl, "tracken_operacional");
-          showToastSeller("Solicitação enviada. Abrimos o operacional nesta solicitação.");
+          showToastSeller("Solicitação de cadastro enviada com sucesso.");
         } else {
-          showToastSeller("Solicitação enviada. Informe a URL do operacional (Vercel) para ela aparecer lá.");
+          showToastSeller("Solicitação de cadastro enviada com sucesso.");
         }
       }
 
