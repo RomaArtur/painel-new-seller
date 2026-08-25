@@ -646,6 +646,7 @@
 
       <div class="p-4 border-t border-gray-100">
         <div
+          id="seller-access-note"
           class="text-[11px] text-gray-500 leading-relaxed bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
         >
           Demo seller sem vínculo. Demais telas liberam após contratar uma
@@ -1064,13 +1065,14 @@
         email: "contato@mundodoseletros.com.br",
         telefone: "(11) 98888-0001",
         cep: "01001-000",
+        marketplaces: ["mercadolivre", "shopee"],
       };
       const VINCULO_STATUS_LABEL = {
         AGUARDANDO_ANALISE: "Aguardando análise",
         EM_CONTATO: "Em contato",
         APROVADA: "Aprovada",
         RECUSADA: "Recusada",
-        CADASTRO_EM_CRIACAO: "Cadastro em criação",
+        CADASTRO_EM_CRIACAO: "Aguardando ativação",
         CONCLUIDA: "Concluída",
       };
 
@@ -1238,6 +1240,7 @@
       }
 
       function refreshVinculoSellerUi() {
+        syncSellerAccessState();
         renderList();
         if (selectedId && markersById[selectedId]) {
           const carrier =
@@ -1254,6 +1257,34 @@
           findOpenRequest(store, store.seller.sellerId, pendingVinculoCarrierId) ||
           findLatestRequest(store, store.seller.sellerId, pendingVinculoCarrierId);
         if (carrier && req) renderVinculoModalSuccess(req, carrier);
+      }
+
+      function getTrackenSellerUrl() {
+        return new URL("../painel-seller/", location.href).href;
+      }
+
+      function syncSellerAccessState() {
+        const store = loadVinculoStore();
+        const accessReleased = (store.requests || []).some(
+          (request) =>
+            request.sellerId === store.seller.sellerId &&
+            request.status === "CONCLUIDA"
+        );
+        if (!accessReleased) return false;
+        document.querySelectorAll(".nav-locked").forEach((item) => {
+          item.classList.remove("nav-locked");
+          item.classList.add("hover:bg-gray-100", "transition-colors");
+          item.querySelectorAll(".fa-lock").forEach((icon) => icon.remove());
+          if (item.tagName === "A") {
+            item.href = getTrackenSellerUrl();
+            item.onclick = null;
+          }
+        });
+        const note = document.getElementById("seller-access-note");
+        if (note) {
+          note.innerHTML = `<i class="fa-solid fa-circle-check text-seller-green mr-1"></i> Cadastro aprovado. TRACKen Seller liberado.`;
+        }
+        return true;
       }
 
       function phoneToWa(phone) {
@@ -2032,9 +2063,9 @@
             <button type="button" onclick="fecharModalVinculo()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Fechar
             </button>
-            <a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center">
-              <i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora
-            </a>
+            ${req.status === "CONCLUIDA"
+              ? `<a href="${getTrackenSellerUrl()}" class="px-4 py-2 bg-seller-green hover:bg-seller-greenDark text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Acessar TRACKen Seller</a>`
+              : `<a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center"><i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora</a>`}
           </div>
         `;
       }
@@ -2056,6 +2087,7 @@
           carrierCode: carrier.code,
           carrierName: carrier.name,
           carrierPhone: carrier.phone,
+          origem: "TRACKEN",
           status: "AGUARDANDO_ANALISE",
           createdAt,
           updatedAt: createdAt,
@@ -2067,6 +2099,7 @@
             email: store.seller.email,
             telefone: store.seller.telefone,
             cep: store.seller.cep,
+            marketplaces: store.seller.marketplaces || [],
           },
           carrierCustomerId: null,
           carrierLoginId: null,
@@ -2233,6 +2266,7 @@
           if (host) host.insertBefore(bar, host.firstChild);
         }
         loadVinculoStore();
+        syncSellerAccessState();
         consumeVinculoStatusFromUrl();
         window.addEventListener("message", (event) => {
           const data = event.data;
