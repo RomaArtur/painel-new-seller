@@ -565,6 +565,7 @@
               <p id="ns-login-error" class="hidden text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
               <button type="submit" class="w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3.5 font-semibold">Acessar</button>
             </form>
+            <button type="button" onclick="nsLoginCadastroAleatorio()" class="w-full mt-3 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg py-3 text-sm font-semibold">Entrar com cadastro aleatório</button>
             <p class="text-center text-xs text-gray-500 mt-6">É novo em nossa plataforma? <button type="button" onclick="nsShowSignup()" class="text-[#39b723] font-semibold hover:underline">Crie sua conta</button></p>
           </div>
           <div id="ns-signup-panel" class="hidden">
@@ -599,6 +600,7 @@
               <p id="ns-signup-error" class="hidden text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
               <button type="submit" class="w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3.5 font-semibold">Criar conta</button>
             </form>
+            <button type="button" onclick="nsLoginCadastroAleatorio()" class="w-full mt-3 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg py-3 text-sm font-semibold">Entrar com cadastro aleatório</button>
             <p class="text-center text-xs text-gray-500 mt-4">Já tenho conta? <button type="button" onclick="nsShowLogin()" class="text-[#39b723] font-semibold hover:underline">Fazer login</button></p>
           </div>
         </section>
@@ -1380,6 +1382,62 @@
         saveVinculoStore(store);
         setSession({ login, sellerId: acc.sellerId });
         enterNsApp();
+      }
+
+      function nsPickRandom(list) {
+        return list[Math.floor(Math.random() * list.length)];
+      }
+
+      function nsSlugRandom(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z]/g, "");
+      }
+
+      function nsLoginCadastroAleatorio() {
+        const nomes = ["Ana", "Bruno", "Camila", "Diego", "Elisa", "Felipe", "Giovana", "Hugo", "Isabela", "Joao"];
+        const sobrenomes = ["Almeida", "Barbosa", "Costa", "Dias", "Ferreira", "Lima", "Mendes", "Nogueira", "Oliveira", "Souza"];
+        const empresas = ["Loja do Centro", "Casa das Pecas", "Eletros Plus", "Moda Urbana", "Atacado Sul", "Tech Box", "Pet e Cia", "Casa Verde"];
+        const ceps = ["01001-000", "01310-100", "04038-001", "05422-000", "08010-090"];
+        const marketplacesPool = ["mercadolivre", "shopee", "magalu", "amazon", "avulso"];
+        const first = nsPickRandom(nomes);
+        const last = nsPickRandom(sobrenomes);
+        const empresa = nsPickRandom(empresas);
+        let login = `${nsSlugRandom(first)}.${nsSlugRandom(last)}.${nsSlugRandom(empresa).slice(0, 8) || "loja"}`.slice(0, 24);
+        const store = loadVinculoStore();
+        if (store.accounts.some((a) => a.login === login)) {
+          login = `${login.slice(0, 20)}.${nsPickRandom(["x", "y", "z", "w"])}`;
+        }
+        const marketplaces = marketplacesPool.filter(() => Math.random() > 0.55);
+        if (!marketplaces.length) marketplaces.push(nsPickRandom(marketplacesPool));
+        const documento = String(Math.floor(10 ** 13 + Math.random() * 9 * 10 ** 13)).slice(0, 14);
+        const ddd = nsPickRandom(["11", "21", "31", "41", "47"]);
+        const seller = {
+          sellerId: nextVinculoId("SEL", store.accounts, "sellerId", 90001),
+          nome: `${first} ${last}`,
+          empresa,
+          documento,
+          cnpj: documento,
+          login,
+          senha: "demo123",
+          email: `${login.replace(/\./g, "")}@exemplo.com.br`,
+          telefone: `(${ddd}) 9${String(8000 + Math.floor(Math.random() * 1999))}-${String(1000 + Math.floor(Math.random() * 8999))}`,
+          cep: nsPickRandom(ceps),
+          marketplaces,
+        };
+        store.accounts.push(seller);
+        store.seller = seller;
+        store.events.push({
+          event: "seller_account_created",
+          at: nowIso(),
+          payload: { sellerId: seller.sellerId, login, random: true },
+        });
+        saveVinculoStore(store);
+        setSession({ login, sellerId: seller.sellerId });
+        enterNsApp();
+        showToastSeller(`Logado como ${login} (cadastro aleatório).`);
       }
 
       function nsLogout() {
