@@ -538,7 +538,7 @@
             <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500 mt-1">New Seller</div>
           </div>
           <h1 class="text-[32px] leading-[1.22] font-bold text-gray-900 mb-4">Encontre sua transportadora e solicite o cadastro</h1>
-          <p class="text-gray-600 leading-relaxed mb-10">Ambiente para sellers ainda sem vínculo. Depois da aprovação, o acesso passa a ser o TRACKen Seller.</p>
+          <p class="text-gray-600 leading-relaxed mb-10">Ambiente para sellers ainda sem vínculo. Depois da aprovação, o acesso passa a ser o TRACKen Seller. Só uma solicitação em aberto por vez.</p>
           <div class="mt-auto bg-white rounded-xl border border-white px-5 py-4 shadow-sm">
             <strong class="text-xs">Comunicação por e-mail</strong>
             <p class="text-[11px] text-gray-500 mt-1">Usamos o e-mail do seu cadastro. O da transportadora vem do cadastro da transportadora no TRACKen Core.</p>
@@ -731,6 +731,7 @@
           class="float-panel absolute z-[500] left-3 right-3 top-3 lg:left-4 lg:right-auto lg:top-4 lg:w-[340px] rounded-xl flex flex-col overflow-hidden max-h-[calc(100%-1.5rem)]"
         >
           <div class="p-4 space-y-4 shrink-0">
+            <p class="text-[11px] leading-snug rounded-lg px-3 py-2" style="background:rgba(251,191,36,.12);color:#fde68a;border:1px solid rgba(251,191,36,.28);">Só uma solicitação em aberto por vez. Acompanhe a atual em Andamento.</p>
             <div>
               <label
                 class="panel-label block text-[11px] font-bold uppercase mb-2"
@@ -872,7 +873,8 @@
         <div id="view-andamento" class="hidden absolute inset-0 overflow-y-auto bg-[#F3F4F6] p-4 lg:p-8">
           <div class="max-w-3xl mx-auto">
             <h1 class="text-xl font-semibold text-gray-800 mb-1">Andamento de solicitações</h1>
-            <p class="text-sm text-gray-500 mb-6">Acompanhe o status. Avisos também chegam no e-mail do cadastro.</p>
+            <p class="text-sm text-gray-500 mb-4">Acompanhe o status. Avisos também chegam no e-mail do cadastro.</p>
+            <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Só uma solicitação em aberto por vez. Enquanto houver uma em análise, aprovada ou aguardando ativação, não dá para enviar outra.</div>
             <div id="andamento-list"></div>
           </div>
         </div>
@@ -2397,7 +2399,7 @@
             </div>
           </div>
           <p class="text-sm text-gray-600 leading-relaxed mb-4">
-            Seus dados serão enviados para esta transportadora analisar seu cadastro e entrar em contato com você.
+            Seus dados serão enviados para esta transportadora analisar seu cadastro. Só uma solicitação em aberto por vez: enquanto esta estiver em andamento, você não envia outra.
           </p>
           ${sellerFields}
           <div class="${editing ? "hidden" : "flex"} justify-end space-x-3">
