@@ -541,7 +541,7 @@
           <p class="text-gray-600 leading-relaxed mb-10">Ambiente para sellers ainda sem vínculo. Depois da aprovação, o acesso passa a ser o TRACKen Seller.</p>
           <div class="mt-auto bg-white rounded-xl border border-white px-5 py-4 shadow-sm">
             <strong class="text-xs">Comunicação por e-mail</strong>
-            <p class="text-[11px] text-gray-500 mt-1">Usamos o e-mail do seu cadastro. O da transportadora vem do cadastro da filial no TRACKen Core.</p>
+            <p class="text-[11px] text-gray-500 mt-1">Usamos o e-mail do seu cadastro. O da transportadora vem do cadastro da transportadora no TRACKen Core.</p>
           </div>
         </aside>
         <section class="p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
@@ -612,7 +612,7 @@
           <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500">New Seller</div>
         </div>
         <h2 class="text-xl font-bold text-gray-900 mb-2">Seu vínculo já foi concluído</h2>
-        <p class="text-sm text-gray-600 mb-6">O acesso agora é pelo TRACKen Seller, com o mesmo login. O New Seller só volta se a transportadora ficar 15 dias sem recebimento físico dos seus pedidos.</p>
+        <p class="text-sm text-gray-600 mb-6">O acesso agora é pelo TRACKen Seller, com o mesmo login.</p>
         <a id="ns-seller-cta" href="#" class="inline-flex items-center justify-center w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3 font-semibold">Acessar TRACKen Seller</a>
         <button type="button" onclick="nsLogout()" class="mt-4 text-xs text-gray-500 hover:underline">Sair</button>
       </div>
@@ -826,13 +826,13 @@
             </div>
 
             <div>
-              <span class="panel-label block text-[10px] font-bold uppercase mb-2">Perfil da filial</span>
+              <span class="panel-label block text-[10px] font-bold uppercase mb-2">Perfil da transportadora</span>
               <div class="perfil-filter">
                 <button type="button" data-perfil="leve" onclick="togglePerfilFiltro('leve')">Leve</button>
                 <button type="button" data-perfil="medio" onclick="togglePerfilFiltro('medio')">Médio</button>
                 <button type="button" data-perfil="pesado" onclick="togglePerfilFiltro('pesado')">Pesado</button>
               </div>
-              <p class="panel-hint text-[10px] mt-1.5">Campo da filial no Core. Sem filtro, mostra todas.</p>
+              <p class="panel-hint text-[10px] mt-1.5">Leve, médio ou pesado. Sem filtro, mostra todas.</p>
             </div>
 
             <button
@@ -1055,8 +1055,8 @@
         "https://painel-operacional-tracken.vercel.app";
       const CORE_FILIAL_EMAIL = "parceiros@expresssp.com.br";
       const LOGIN_REGEX = /^[a-z]+(?:[._-][a-z]+)*$/;
-      const OPEN_STATUSES = ["AGUARDANDO_ANALISE", "EM_CONTATO", "APROVADA", "CADASTRO_EM_CRIACAO"];
-      const SLA_STATUSES = ["AGUARDANDO_ANALISE", "EM_CONTATO"];
+      const OPEN_STATUSES = ["AGUARDANDO_ANALISE", "APROVADA", "CADASTRO_EM_CRIACAO"];
+      const SLA_STATUSES = ["AGUARDANDO_ANALISE"];
       const MARKETPLACES = [
         { id: "mercadolivre", nome: "Mercado Livre" },
         { id: "shopee", nome: "Shopee" },
@@ -1066,7 +1066,6 @@
       ];
       const VINCULO_STATUS_LABEL = {
         AGUARDANDO_ANALISE: "Aguardando análise",
-        EM_CONTATO: "Em contato",
         APROVADA: "Aprovada",
         RECUSADA: "Recusada",
         CADASTRO_EM_CRIACAO: "Aguardando ativação",
@@ -1273,7 +1272,7 @@
           return { ok: false, reason: "Você já tem uma solicitação em andamento. Acompanhe em Andamento." };
         }
         if (sellerBlockingVinculo(store, sellerId)) {
-          return { ok: false, reason: "Há um vínculo aprovado ou concluído. O New Seller só libera de novo após 15 dias sem recebimento físico na transportadora." };
+          return { ok: false, reason: "Há um vínculo ativo. O acesso é pelo TRACKen Seller, com o mesmo login." };
         }
         return { ok: true };
       }
@@ -1535,8 +1534,6 @@
             return "text-emerald-600";
           case "CADASTRO_EM_CRIACAO":
             return "text-orange-500";
-          case "EM_CONTATO":
-            return "text-blue-600";
           default:
             return "text-amber-600";
         }
@@ -1741,14 +1738,33 @@
         return { ...c, km, mins: estimateMins(km) };
       }
 
-      const FILIAL_PERFIS = [
-        { id: "leve", nome: "Leve" },
-        { id: "medio", nome: "Médio" },
-        { id: "pesado", nome: "Pesado" },
+      const TRANSPORTADORA_PERFIS = [
+        { id: "leve", nome: "Leve", descricao: "Encomendas pequenas, até cerca de 5 kg." },
+        { id: "medio", nome: "Médio", descricao: "Caixas médias, até cerca de 15 kg." },
+        { id: "pesado", nome: "Pesado", descricao: "Volumes grandes e palete." },
       ];
 
       function perfilLabel(id) {
-        return FILIAL_PERFIS.find((p) => p.id === id)?.nome || id;
+        return TRANSPORTADORA_PERFIS.find((p) => p.id === id)?.nome || id;
+      }
+
+      function perfilDescricao(c, id) {
+        return (c.perfilDesc && c.perfilDesc[id]) ||
+          TRANSPORTADORA_PERFIS.find((p) => p.id === id)?.descricao ||
+          "";
+      }
+
+      function perfilDescHtml(c, dark) {
+        const perfis = c.perfis || [];
+        const color = dark ? "#9ca3af" : "#9ca3af";
+        const lines = perfis
+          .map((id) => {
+            const desc = perfilDescricao(c, id);
+            if (!desc) return "";
+            return `<div style="font-size:10px;line-height:1.35;color:${color};margin-top:4px;"><strong style="color:${dark ? "#d1d5db" : "#e5e7eb"};">${perfilLabel(id)}:</strong> ${desc}</div>`;
+          })
+          .join("");
+        return lines;
       }
 
       function getSelectedPerfis() {
@@ -1826,9 +1842,7 @@
             ? "text-red-300"
             : req.status === "CONCLUIDA" || req.status === "APROVADA"
               ? "text-emerald-300"
-              : req.status === "EM_CONTATO"
-                ? "text-sky-300"
-                : "text-amber-200";
+              : "text-amber-200";
         return `<div class="mt-1.5 text-[10px] font-semibold ${color}">${label}</div>`;
       }
 
@@ -1851,6 +1865,7 @@
               </span>
             </div>
             ${perfilChipsHtml(c, true)}
+            ${perfilDescHtml(c, true)}
             ${requestChipHtml(c.id)}
           </div>`;
       }
@@ -1938,6 +1953,7 @@
                 <span>${c.address}</span>
               </div>
               ${perfilChipsHtml(c, false)}
+              ${perfilDescHtml(c, false)}
             </div>
             <div style="padding:0 14px 14px;">
               ${cta}
