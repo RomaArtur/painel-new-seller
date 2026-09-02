@@ -287,9 +287,39 @@
         color: #ffffff !important;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
       }
-      .carrier-card .meta-accent {
-        color: #9beb66 !important;
+      .carrier-card .perfil-chip {
+        display: inline-flex;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 999px;
+        border: 1px solid rgba(116, 200, 67, 0.45);
+        color: #c8f5a8;
+        background: rgba(116, 200, 67, 0.12);
+      }
+      .perfil-filter {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .perfil-filter button {
+        flex: 1;
+        min-width: 0;
+        font-size: 11px;
         font-weight: 600;
+        padding: 7px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(8, 12, 22, 0.4);
+        color: #d1d5db;
+        cursor: pointer;
+      }
+      .perfil-filter button.active {
+        border-color: #74c843;
+        background: rgba(116, 200, 67, 0.22);
+        color: #fff;
       }
 
       input[type="range"].radius-slider {
@@ -487,178 +517,134 @@
       body.solo-mode header button.md\\:hidden {
         display: none !important;
       }
+
+      .ns-wordmark {
+        line-height: 1.05;
+      }
+      .ns-wordmark strong {
+        letter-spacing: -0.03em;
+      }
     </style>
   </head>
-  <body class="flex h-screen overflow-hidden text-sm bg-[#F3F4F6]">
+  <body class="h-screen overflow-hidden text-sm bg-[#F3F4F6]">
+    <iframe id="ops-sync-frame" title="Sincronização com o operacional" class="hidden"></iframe>
+
+    <!-- LOGIN / CADASTRO -->
+    <div id="ns-auth" class="min-h-screen bg-[#f4f5f7] text-gray-800 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+      <main class="w-full max-w-[1100px] min-h-[640px] bg-white rounded-2xl shadow-2xl shadow-gray-300/50 overflow-hidden grid lg:grid-cols-[41%_59%] my-4">
+        <aside class="hidden lg:flex flex-col p-12 relative overflow-hidden" style="background-color:#f4faef;background-image:radial-gradient(circle at 15% 25%, rgba(116,200,67,.16), transparent 34%), radial-gradient(circle at 85% 85%, rgba(116,200,67,.2), transparent 38%);">
+          <div class="ns-wordmark mb-14">
+            <strong class="text-[28px] text-gray-900">TRACK<span class="text-[#39b723]">en</span></strong>
+            <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500 mt-1">New Seller</div>
+          </div>
+          <h1 class="text-[32px] leading-[1.22] font-bold text-gray-900 mb-4">Encontre sua transportadora e solicite o cadastro</h1>
+          <p class="text-gray-600 leading-relaxed mb-10">Ambiente para sellers ainda sem vínculo. Depois da aprovação, o acesso passa a ser o TRACKen Seller.</p>
+          <div class="mt-auto bg-white rounded-xl border border-white px-5 py-4 shadow-sm">
+            <strong class="text-xs">Comunicação por e-mail</strong>
+            <p class="text-[11px] text-gray-500 mt-1">Usamos o e-mail do seu cadastro. O da transportadora vem do cadastro da filial no TRACKen Core.</p>
+          </div>
+        </aside>
+        <section class="p-6 sm:p-10 lg:p-12 flex flex-col justify-center">
+          <div class="lg:hidden mb-8 ns-wordmark">
+            <strong class="text-2xl text-gray-900">TRACK<span class="text-[#39b723]">en</span></strong>
+            <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500">New Seller</div>
+          </div>
+          <div id="ns-login-panel">
+            <h2 class="text-2xl font-bold text-gray-900">Bem-vindo de volta!</h2>
+            <p class="text-sm text-gray-500 mt-1">Acesse sua conta para continuar</p>
+            <div class="w-10 h-0.5 bg-[#39b723] mt-5 mb-6"></div>
+            <form id="ns-login-form" class="space-y-4" onsubmit="event.preventDefault();nsLogin()">
+              <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Login
+                <span class="relative block mt-2"><i class="fa-regular fa-user text-[#39b723] absolute left-4 top-1/2 -translate-y-1/2 text-xs"></i>
+                <input id="ns-login-user" required autocomplete="username" placeholder="loja.eletros" class="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-sm outline-none focus:border-[#39b723] focus:ring-2 focus:ring-green-100 lowercase" /></span>
+              </label>
+              <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Senha
+                <span class="relative block mt-2"><i class="fa-solid fa-lock text-[#39b723] absolute left-4 top-1/2 -translate-y-1/2 text-xs"></i>
+                <input id="ns-login-pass" type="password" required autocomplete="current-password" class="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-3 text-sm outline-none focus:border-[#39b723] focus:ring-2 focus:ring-green-100" /></span>
+              </label>
+              <p id="ns-login-error" class="hidden text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
+              <button type="submit" class="w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3.5 font-semibold">Acessar</button>
+            </form>
+            <p class="text-center text-xs text-gray-500 mt-6">É novo em nossa plataforma? <button type="button" onclick="nsShowSignup()" class="text-[#39b723] font-semibold hover:underline">Crie sua conta</button></p>
+          </div>
+          <div id="ns-signup-panel" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-900">Criar conta</h2>
+            <p class="text-sm text-gray-500 mt-1">Os dados serão reaproveitados na solicitação e nos avisos por e-mail.</p>
+            <div class="w-10 h-0.5 bg-[#39b723] mt-5 mb-6"></div>
+            <form id="ns-signup-form" class="space-y-4" onsubmit="event.preventDefault();nsSignup()">
+              <div class="grid sm:grid-cols-2 gap-3">
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Nome
+                  <input name="nome" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Empresa
+                  <input name="empresa" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">CPF/CNPJ
+                  <input name="documento" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Login
+                  <input name="login" required placeholder="loja.eletros" class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm lowercase" />
+                  <span class="normal-case font-normal text-[10px] text-gray-400">Só minúsculas, com _ - ou . Sem espaços.</span>
+                </label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">E-mail
+                  <input name="email" type="email" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Telefone
+                  <input name="telefone" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">CEP
+                  <input name="cep" required placeholder="00000-000" class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gray-600">Senha
+                  <input name="senha" type="password" minlength="6" required class="mt-2 w-full rounded-lg border border-gray-300 py-2.5 px-3 text-sm" /></label>
+              </div>
+              <fieldset>
+                <legend class="text-[11px] font-bold uppercase tracking-wide text-gray-600 mb-2">Marketplaces <span class="normal-case font-normal">(pelo menos um)</span></legend>
+                <div id="ns-signup-mkt" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+              </fieldset>
+              <p id="ns-signup-error" class="hidden text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></p>
+              <button type="submit" class="w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3.5 font-semibold">Criar conta</button>
+            </form>
+            <p class="text-center text-xs text-gray-500 mt-4">Já tenho conta? <button type="button" onclick="nsShowLogin()" class="text-[#39b723] font-semibold hover:underline">Fazer login</button></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="ns-seller-gate" class="hidden min-h-screen bg-[#f4f5f7] flex items-center justify-center p-6">
+      <div class="max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div class="ns-wordmark mb-6">
+          <strong class="text-2xl text-gray-900">TRACK<span class="text-[#39b723]">en</span></strong>
+          <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500">New Seller</div>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Seu vínculo já foi concluído</h2>
+        <p class="text-sm text-gray-600 mb-6">O acesso agora é pelo TRACKen Seller, com o mesmo login. O New Seller só volta se a transportadora ficar 15 dias sem recebimento físico dos seus pedidos.</p>
+        <a id="ns-seller-cta" href="#" class="inline-flex items-center justify-center w-full bg-[#39b723] hover:bg-green-600 text-white rounded-lg py-3 font-semibold">Acessar TRACKen Seller</a>
+        <button type="button" onclick="nsLogout()" class="mt-4 text-xs text-gray-500 hover:underline">Sair</button>
+      </div>
+    </div>
+
+    <div id="app-shell" class="hidden h-screen overflow-hidden">
     <!-- DESKTOP SIDEBAR -->
     <aside
       id="sidebar"
       class="w-64 bg-white border-r border-gray-200 flex flex-col h-full hidden md:flex z-20 shrink-0 shadow-sm"
     >
       <div class="h-16 flex items-center px-5 border-b border-gray-100">
-        <div class="flex items-center">
-          <img
-            src="imgi_1_seller.png"
-            alt="TRACKen New Seller"
-            class="h-10 w-auto object-contain"
-          />
+        <div class="ns-wordmark">
+          <strong class="text-lg text-gray-900">TRACK<span class="text-seller-green">en</span></strong>
+          <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">New Seller</div>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-        <div>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Painel')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-house w-4 text-center"></i>
-                <span>Painel</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Pedidos')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-box-archive w-4 text-center"></i>
-                <span>Pedidos</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Financeiro')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-coins w-4 text-center"></i>
-                <span>Financeiro</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Notificação')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-regular fa-bell w-4 text-center"></i>
-                <span>Notificação</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Suporte')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-headset w-4 text-center"></i>
-                <span>Suporte</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-          </nav>
-        </div>
-
-        <div>
-          <div
-            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            FERRAMENTAS
-          </div>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              id="nav-transportadora"
-              class="nav-btn nav-item-active flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug"
-            >
-              <i class="fa-solid fa-truck w-4 text-center text-gray-500"></i>
-              <span>Encontre sua Transportadora</span>
-            </a>
-
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Controle de reputação')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug"
-            >
-              <div class="flex items-center space-x-3">
-                <i
-                  class="fa-solid fa-clock-rotate-left w-4 text-center text-gray-500"
-                ></i>
-                <span class="flex-1">Controle de reputação</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-          </nav>
-        </div>
-
-        <div>
-          <div
-            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            CONFIGURAÇÃO
-          </div>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Minha Conta')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-regular fa-user w-4 text-center"></i>
-                <span>Minha Conta</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-          </nav>
-        </div>
-
-        <div>
-          <div
-            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            SISTEMA
-          </div>
-          <nav class="space-y-1">
-            <a
-              href="#"
-              onclick="blockedNav(event, 'Desconectar')"
-              class="nav-locked flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 font-medium"
-            >
-              <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-power-off w-4 text-center"></i>
-                <span>Desconectar</span>
-              </div>
-              <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
-            </a>
-          </nav>
-        </div>
+      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <a href="#" id="nav-transportadora" onclick="event.preventDefault();nsNavigate('map')" class="nav-item-active flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug">
+          <i class="fa-solid fa-truck w-4 text-center text-gray-500"></i>
+          <span>Encontre sua transportadora</span>
+        </a>
+        <a href="#" id="nav-andamento" onclick="event.preventDefault();nsNavigate('andamento')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-600 font-medium text-xs leading-snug hover:bg-gray-100">
+          <i class="fa-solid fa-list-check w-4 text-center text-gray-500"></i>
+          <span>Andamento de solicitações</span>
+        </a>
       </div>
-
       <div class="p-4 border-t border-gray-100">
-        <div
-          id="seller-access-note"
-          class="text-[11px] text-gray-500 leading-relaxed bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
-        >
-          Demo seller sem vínculo. Demais telas liberam após contratar uma
-          transportadora.
-        </div>
-        <button
-          type="button"
-          onclick="resetVinculoDemoSeller()"
-          class="mt-2 w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-        >
-          <i class="fa-solid fa-rotate-right mr-2"></i> Restaurar Demo
+        <div id="ns-session-label" class="text-[11px] text-gray-500 mb-2 truncate"></div>
+        <button type="button" onclick="nsLogout()" class="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-[11px] font-medium text-gray-700 bg-white hover:bg-gray-50">
+          <i class="fa-solid fa-power-off mr-2"></i> Sair
         </button>
       </div>
     </aside>
@@ -676,11 +662,10 @@
       <div
         class="h-16 flex items-center justify-between px-5 border-b border-gray-100"
       >
-        <img
-          src="imgi_1_seller.png"
-          alt="TRACKen New Seller"
-          class="h-9 w-auto object-contain"
-        />
+        <div class="ns-wordmark">
+          <strong class="text-base text-gray-900">TRACK<span class="text-seller-green">en</span></strong>
+          <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">New Seller</div>
+        </div>
         <button
           onclick="toggleMobileMenu(false)"
           class="text-gray-400 hover:text-gray-600 p-1"
@@ -688,33 +673,16 @@
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-        <div>
-          <div
-            class="px-3 mb-2 text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
-          >
-            FERRAMENTAS
-          </div>
-          <a
-            href="#"
-            onclick="toggleMobileMenu(false)"
-            class="flex items-center space-x-3 px-3 py-2 text-xs rounded-lg bg-[#4A4E54] text-white"
-          >
+      <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          <a href="#" onclick="event.preventDefault();toggleMobileMenu(false);nsNavigate('map')" class="flex items-center space-x-3 px-3 py-2 text-xs rounded-lg bg-[#4A4E54] text-white">
             <i class="fa-solid fa-truck w-4 text-center"></i>
-            <span>Encontre sua Transportadora</span>
+            <span>Encontre sua transportadora</span>
           </a>
-          <a
-            href="#"
-            onclick="blockedNav(event, 'Controle de reputação')"
-            class="nav-locked flex items-center justify-between px-3 py-2 text-gray-600 text-xs mt-1"
-          >
-            <div class="flex items-center space-x-3">
-              <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i>
-              <span>Controle de reputação</span>
-            </div>
-            <i class="fa-solid fa-lock text-[10px] text-gray-400"></i>
+          <a href="#" onclick="event.preventDefault();toggleMobileMenu(false);nsNavigate('andamento')" class="flex items-center space-x-3 px-3 py-2 text-xs rounded-lg text-gray-600 mt-1">
+            <i class="fa-solid fa-list-check w-4 text-center"></i>
+            <span>Andamento de solicitações</span>
           </a>
-        </div>
+          <button type="button" onclick="nsLogout()" class="w-full mt-6 text-left px-3 py-2 text-xs text-gray-600">Sair</button>
       </div>
     </aside>
 
@@ -731,9 +699,9 @@
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
           <div class="hidden sm:flex items-center text-xs text-gray-400 space-x-1.5">
-            <span>Ferramentas</span>
+            <span>New Seller</span>
             <i class="fa-solid fa-chevron-right text-[9px] text-gray-500"></i>
-            <span class="text-white font-medium">TRACKen New Seller</span>
+            <span id="ns-header-title" class="text-white font-medium">Encontre sua transportadora</span>
           </div>
         </div>
 
@@ -752,6 +720,7 @@
       </header>
 
       <main class="flex-1 relative overflow-hidden bg-[#0F172A]">
+        <div id="view-map" class="absolute inset-0">
         <!-- FULLSCREEN MAP -->
         <div id="map" class="absolute inset-0 z-0"></div>
 
@@ -856,6 +825,16 @@
               />
             </div>
 
+            <div>
+              <span class="panel-label block text-[10px] font-bold uppercase mb-2">Perfil da filial</span>
+              <div class="perfil-filter">
+                <button type="button" data-perfil="leve" onclick="togglePerfilFiltro('leve')">Leve</button>
+                <button type="button" data-perfil="medio" onclick="togglePerfilFiltro('medio')">Médio</button>
+                <button type="button" data-perfil="pesado" onclick="togglePerfilFiltro('pesado')">Pesado</button>
+              </div>
+              <p class="panel-hint text-[10px] mt-1.5">Campo da filial no Core. Sem filtro, mostra todas.</p>
+            </div>
+
             <button
               onclick="limparBusca()"
               class="glass-btn-muted w-full py-1.5 rounded-lg text-xs transition-colors flex items-center justify-center space-x-1.5"
@@ -887,7 +866,16 @@
             </div>
           </div>
         </aside>
+        </div>
+        <div id="view-andamento" class="hidden absolute inset-0 overflow-y-auto bg-[#F3F4F6] p-4 lg:p-8">
+          <div class="max-w-3xl mx-auto">
+            <h1 class="text-xl font-semibold text-gray-800 mb-1">Andamento de solicitações</h1>
+            <p class="text-sm text-gray-500 mb-6">Acompanhe o status. Avisos também chegam no e-mail do cadastro.</p>
+            <div id="andamento-list"></div>
+          </div>
+        </div>
       </main>
+    </div>
     </div>
 
     <!-- ===== MODAL: Solicitar cadastro ===== -->
@@ -926,6 +914,7 @@
           lng: -46.7481,
           baseKm: 1.63,
           mins: 6,
+          perfis: ["leve"],
         },
         {
           id: "pantera",
@@ -938,6 +927,7 @@
           lng: -46.7042,
           baseKm: 2.41,
           mins: 9,
+          perfis: ["leve", "medio"],
         },
         {
           id: "dimensao",
@@ -950,6 +940,7 @@
           lng: -46.7124,
           baseKm: 4.12,
           mins: 14,
+          perfis: ["medio", "pesado"],
         },
         {
           id: "alfa",
@@ -962,6 +953,7 @@
           lng: -46.6601,
           baseKm: 3.4,
           mins: 12,
+          perfis: ["pesado"],
         },
         {
           id: "verde",
@@ -974,6 +966,7 @@
           lng: -46.6519,
           baseKm: 4.8,
           mins: 16,
+          perfis: ["leve", "medio", "pesado"],
         },
         {
           id: "express-sp",
@@ -986,6 +979,7 @@
           lng: -46.6398,
           baseKm: 1.2,
           mins: 5,
+          perfis: ["leve", "medio"],
         },
         {
           id: "norte-log",
@@ -998,6 +992,7 @@
           lng: -46.6291,
           baseKm: 5.6,
           mins: 18,
+          perfis: ["leve"],
         },
         {
           id: "carandiru-ship",
@@ -1010,6 +1005,7 @@
           lng: -46.6245,
           baseKm: 6.1,
           mins: 20,
+          perfis: ["medio"],
         },
         {
           id: "bom-retiro",
@@ -1022,6 +1018,7 @@
           lng: -46.6352,
           baseKm: 2.9,
           mins: 11,
+          perfis: ["pesado"],
         },
         {
           id: "vila-maria",
@@ -1034,10 +1031,10 @@
           lng: -46.5842,
           baseKm: 7.4,
           mins: 24,
+          perfis: ["leve", "medio"],
         },
       ];
 
-      // CEPs sem cobertura (demo)
       const CEP_SEM_COBERTURA = new Set([
         "69000000",
         "69000-000",
@@ -1053,18 +1050,20 @@
       // o Seller não precise conhecer ou preencher uma URL técnica.
       // ============================================================
       const VINCULO_STORE_KEY = "tracken_vinculo_store";
+      const NS_SESSION_KEY = "tracken_ns_session";
       const DEFAULT_VINCULO_HUB_URL =
         "https://painel-operacional-tracken.vercel.app";
-      const DEMO_SELLER = {
-        sellerId: "SEL-00842",
-        nome: "Artur Silva",
-        empresa: "Mundo dos Eletros",
-        cnpj: "12.345.678/0001-90",
-        email: "contato@mundodoseletros.com.br",
-        telefone: "(11) 98888-0001",
-        cep: "01001-000",
-        marketplaces: ["mercadolivre", "shopee"],
-      };
+      const CORE_FILIAL_EMAIL = "parceiros@expresssp.com.br";
+      const LOGIN_REGEX = /^[a-z]+(?:[._-][a-z]+)*$/;
+      const OPEN_STATUSES = ["AGUARDANDO_ANALISE", "EM_CONTATO", "APROVADA", "CADASTRO_EM_CRIACAO"];
+      const SLA_STATUSES = ["AGUARDANDO_ANALISE", "EM_CONTATO"];
+      const MARKETPLACES = [
+        { id: "mercadolivre", nome: "Mercado Livre" },
+        { id: "shopee", nome: "Shopee" },
+        { id: "magalu", nome: "Magalu" },
+        { id: "amazon", nome: "Amazon" },
+        { id: "avulso", nome: "Avulso" },
+      ];
       const VINCULO_STATUS_LABEL = {
         AGUARDANDO_ANALISE: "Aguardando análise",
         EM_CONTATO: "Em contato",
@@ -1072,47 +1071,405 @@
         RECUSADA: "Recusada",
         CADASTRO_EM_CRIACAO: "Aguardando ativação",
         CONCLUIDA: "Concluída",
+        EXPIRADA: "Expirada",
       };
 
       function emptyVinculoStore() {
         return {
-          seller: { ...DEMO_SELLER },
+          accounts: [],
+          seller: null,
           requests: [],
           customers: [],
           logins: [],
           events: [],
+          emails: [],
+          slaNowOffsetMs: 0,
         };
       }
 
       function loadVinculoStore() {
         const raw = localStorage.getItem(VINCULO_STORE_KEY);
+        let store;
         if (!raw) {
-          const store = emptyVinculoStore();
-          store.events.push({
-            event: "seller_account_created",
-            at: new Date().toISOString(),
-            payload: { sellerId: DEMO_SELLER.sellerId },
-          });
+          store = emptyVinculoStore();
           saveVinculoStore(store);
-          return store;
+        } else {
+          try {
+            store = JSON.parse(raw);
+            store.accounts = store.accounts || [];
+            store.requests = store.requests || [];
+            store.customers = store.customers || [];
+            store.logins = store.logins || [];
+            store.events = store.events || [];
+            store.emails = store.emails || [];
+            store.slaNowOffsetMs = store.slaNowOffsetMs || 0;
+            if (store.seller && store.seller.login && !store.accounts.find((a) => a.login === store.seller.login)) {
+              store.accounts.push({ ...store.seller, senha: store.seller.senha || "demo123" });
+            }
+          } catch (e) {
+            store = emptyVinculoStore();
+          }
         }
-        try {
-          const parsed = JSON.parse(raw);
-          if (!parsed.seller) parsed.seller = { ...DEMO_SELLER };
-          parsed.requests = parsed.requests || [];
-          parsed.customers = parsed.customers || [];
-          parsed.logins = parsed.logins || [];
-          parsed.events = parsed.events || [];
-          return parsed;
-        } catch (e) {
-          const store = emptyVinculoStore();
-          saveVinculoStore(store);
-          return store;
-        }
+        expireOverdueRequests(store);
+        return store;
       }
 
       function saveVinculoStore(store) {
         localStorage.setItem(VINCULO_STORE_KEY, JSON.stringify(store));
+      }
+
+      function slaNowDate(store) {
+        return new Date(Date.now() + ((store || loadVinculoStore()).slaNowOffsetMs || 0));
+      }
+
+      function addBusinessHours(start, hours) {
+        const d = new Date(start.getTime());
+        let remaining = hours * 60;
+        while (remaining > 0) {
+          d.setMinutes(d.getMinutes() + 1);
+          const day = d.getDay();
+          const h = d.getHours() + d.getMinutes() / 60;
+          if (day !== 0 && day !== 6 && h >= 8 && h < 18) remaining -= 1;
+        }
+        return d;
+      }
+
+      function slaDeadline(createdAt) {
+        return addBusinessHours(new Date(createdAt), 4);
+      }
+
+      function slaRemainingMs(req, store) {
+        if (!SLA_STATUSES.includes(req.status)) return null;
+        return slaDeadline(req.createdAt).getTime() - slaNowDate(store).getTime();
+      }
+
+      function formatSla(ms) {
+        if (ms == null) return "—";
+        if (ms <= 0) return "Expirada";
+        const min = Math.round(ms / 60000);
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        return h ? `${h}h ${m}min` : `${m} min`;
+      }
+
+      function expireOverdueRequests(store) {
+        let changed = false;
+        (store.requests || []).forEach((req) => {
+          if (!SLA_STATUSES.includes(req.status)) return;
+          if (slaRemainingMs(req, store) > 0) return;
+          req.status = "EXPIRADA";
+          req.updatedAt = slaNowDate(store).toISOString();
+          req.historico = req.historico || [];
+          req.historico.push({
+            at: req.updatedAt,
+            action: "Solicitação expirada (4 horas úteis sem análise).",
+            type: "system",
+          });
+          pushEmail(store, {
+            to: req.sellerSnapshot?.email,
+            subject: `Solicitação ${req.requestId} expirada`,
+            body: "O prazo de 4 horas úteis acabou. Você pode enviar uma nova solicitação.",
+          });
+          pushEmail(store, {
+            to: CORE_FILIAL_EMAIL,
+            subject: `Solicitação ${req.requestId} expirada`,
+            body: "A solicitação expirou sem aprovação ou recusa.",
+          });
+          changed = true;
+        });
+        if (changed) saveVinculoStore(store);
+      }
+
+      function maybeSlaNotices(store) {
+        (store.requests || []).forEach((req) => {
+          if (!SLA_STATUSES.includes(req.status)) return;
+          const ms = slaRemainingMs(req, store);
+          req.slaNotices = req.slaNotices || [];
+          if (!req.slaNotices.includes("created")) {
+            req.slaNotices.push("created");
+            pushEmail(store, {
+              to: CORE_FILIAL_EMAIL,
+              subject: `Nova solicitação ${req.requestId}`,
+              body: `${req.sellerSnapshot?.nome || "Seller"} pediu cadastro. Analise em até 4 horas úteis.`,
+            });
+          }
+          if (ms != null && ms <= 2 * 3600000 && ms > 30 * 60000 && !req.slaNotices.includes("half")) {
+            req.slaNotices.push("half");
+            pushEmail(store, {
+              to: CORE_FILIAL_EMAIL,
+              subject: `Pendente: ${req.requestId} (~2h úteis)`,
+              body: "Siga com a aprovação ou recusa. O prazo de 4 horas úteis está na metade.",
+            });
+          }
+          if (ms != null && ms <= 30 * 60000 && ms > 0 && !req.slaNotices.includes("urgent")) {
+            req.slaNotices.push("urgent");
+            pushEmail(store, {
+              to: CORE_FILIAL_EMAIL,
+              subject: `Urgente: ${req.requestId} (menos de 30 min)`,
+              body: "A solicitação vai expirar. Aprove ou recuse agora.",
+            });
+          }
+        });
+        saveVinculoStore(store);
+      }
+
+      function pushEmail(store, mail) {
+        store.emails = store.emails || [];
+        store.emails.push({
+          ...mail,
+          at: slaNowDate(store).toISOString(),
+          from: "TRACKen",
+        });
+      }
+
+      function marketplaceLabel(id) {
+        return MARKETPLACES.find((m) => m.id === id)?.nome || id;
+      }
+
+      function getSession() {
+        try {
+          return JSON.parse(localStorage.getItem(NS_SESSION_KEY) || "null");
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function setSession(payload) {
+        localStorage.setItem(NS_SESSION_KEY, JSON.stringify(payload));
+      }
+
+      function nsLoggedSeller(store) {
+        const session = getSession();
+        if (!session) return null;
+        return (store.accounts || []).find((a) => a.login === session.login) || null;
+      }
+
+      function findOpenRequest(store, sellerId, carrierId) {
+        return (store.requests || []).find(
+          (r) =>
+            r.sellerId === sellerId &&
+            r.carrierId === carrierId &&
+            OPEN_STATUSES.includes(r.status)
+        );
+      }
+
+      function sellerOpenRequest(store, sellerId) {
+        return (store.requests || []).find(
+          (r) => r.sellerId === sellerId && OPEN_STATUSES.includes(r.status)
+        );
+      }
+
+      function sellerBlockingVinculo(store, sellerId) {
+        return (store.requests || []).find(
+          (r) =>
+            r.sellerId === sellerId &&
+            (r.status === "CONCLUIDA" || r.status === "APROVADA" || r.status === "CADASTRO_EM_CRIACAO") &&
+            !r.semRecebimentoFisico15d
+        );
+      }
+
+      function canCreateRequest(store, sellerId) {
+        if (sellerOpenRequest(store, sellerId)) {
+          return { ok: false, reason: "Você já tem uma solicitação em andamento. Acompanhe em Andamento." };
+        }
+        if (sellerBlockingVinculo(store, sellerId)) {
+          return { ok: false, reason: "Há um vínculo aprovado ou concluído. O New Seller só libera de novo após 15 dias sem recebimento físico na transportadora." };
+        }
+        return { ok: true };
+      }
+
+      function normalizeLogin(value) {
+        return String(value || "").trim().toLowerCase();
+      }
+
+      function normalizeDocument(value) {
+        return String(value || "").replace(/\D/g, "");
+      }
+
+      function nsShowSignup() {
+        document.getElementById("ns-login-panel").classList.add("hidden");
+        document.getElementById("ns-signup-panel").classList.remove("hidden");
+      }
+      function nsShowLogin() {
+        document.getElementById("ns-signup-panel").classList.add("hidden");
+        document.getElementById("ns-login-panel").classList.remove("hidden");
+      }
+
+      function nsFillMarketplaces() {
+        const box = document.getElementById("ns-signup-mkt");
+        if (!box || box.dataset.ready) return;
+        box.dataset.ready = "1";
+        box.innerHTML = MARKETPLACES.map(
+          (m) => `<label class="h-11 border border-gray-300 rounded-lg flex items-center justify-center text-xs font-medium cursor-pointer has-[:checked]:border-[#39b723] has-[:checked]:bg-green-50"><input type="checkbox" value="${m.id}" class="sr-only" /><span>${m.nome}</span></label>`
+        ).join("");
+      }
+
+      function nsShowError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.remove("hidden");
+      }
+
+      function nsSignup() {
+        const form = document.getElementById("ns-signup-form");
+        if (!form.reportValidity()) return;
+        const data = new FormData(form);
+        const login = normalizeLogin(data.get("login"));
+        const documento = String(data.get("documento") || "").trim();
+        const digits = normalizeDocument(documento);
+        const mkt = [...document.querySelectorAll("#ns-signup-mkt input:checked")].map((i) => i.value);
+        if (!LOGIN_REGEX.test(login)) {
+          nsShowError("ns-signup-error", "Login inválido: só minúsculas, com _ - ou . e sem espaços.");
+          return;
+        }
+        if (![11, 14].includes(digits.length)) {
+          nsShowError("ns-signup-error", "Informe um CPF ou CNPJ válido.");
+          return;
+        }
+        if (!mkt.length) {
+          nsShowError("ns-signup-error", "Selecione ao menos um marketplace.");
+          return;
+        }
+        const store = loadVinculoStore();
+        if (store.accounts.some((a) => a.login === login)) {
+          nsShowError("ns-signup-error", "Este login já está em uso.");
+          return;
+        }
+        if (store.accounts.some((a) => normalizeDocument(a.documento || a.cnpj) === digits)) {
+          nsShowError("ns-signup-error", "Já existe uma conta ou uma solicitação em andamento para este CPF/CNPJ.");
+          return;
+        }
+        const openDoc = store.requests.find((r) => {
+          const d = normalizeDocument(r.sellerSnapshot?.documento || r.sellerSnapshot?.cnpj);
+          return d === digits && (OPEN_STATUSES.includes(r.status) || (["APROVADA", "CONCLUIDA"].includes(r.status) && !r.semRecebimentoFisico15d));
+        });
+        if (openDoc) {
+          nsShowError("ns-signup-error", "Já existe uma conta ou uma solicitação de vínculo em andamento para este CPF/CNPJ.");
+          return;
+        }
+        const seller = {
+          sellerId: `SEL-${Date.now().toString().slice(-6)}`,
+          nome: String(data.get("nome") || "").trim(),
+          empresa: String(data.get("empresa") || "").trim(),
+          documento,
+          cnpj: documento,
+          login,
+          senha: String(data.get("senha") || ""),
+          email: String(data.get("email") || "").trim(),
+          telefone: String(data.get("telefone") || "").trim(),
+          cep: String(data.get("cep") || "").trim(),
+          marketplaces: mkt,
+        };
+        store.accounts.push(seller);
+        store.seller = seller;
+        store.events.push({ event: "seller_account_created", at: nowIso(), payload: { sellerId: seller.sellerId, login } });
+        saveVinculoStore(store);
+        setSession({ login, sellerId: seller.sellerId });
+        enterNsApp();
+      }
+
+      function nsLogin() {
+        const login = normalizeLogin(document.getElementById("ns-login-user").value);
+        const senha = document.getElementById("ns-login-pass").value;
+        const store = loadVinculoStore();
+        const acc = store.accounts.find((a) => a.login === login && a.senha === senha);
+        if (!acc) {
+          nsShowError("ns-login-error", "Login ou senha inválidos.");
+          return;
+        }
+        store.seller = acc;
+        saveVinculoStore(store);
+        setSession({ login, sellerId: acc.sellerId });
+        enterNsApp();
+      }
+
+      function nsLogout() {
+        localStorage.removeItem(NS_SESSION_KEY);
+        document.getElementById("app-shell").classList.add("hidden");
+        document.getElementById("app-shell").classList.remove("flex");
+        document.getElementById("ns-seller-gate").classList.add("hidden");
+        document.getElementById("ns-auth").classList.remove("hidden");
+        nsShowLogin();
+      }
+
+      function enterNsApp() {
+        const store = loadVinculoStore();
+        const seller = nsLoggedSeller(store);
+        if (!seller) {
+          nsLogout();
+          return;
+        }
+        store.seller = seller;
+        saveVinculoStore(store);
+        const blocking = (store.requests || []).find(
+          (r) => r.sellerId === seller.sellerId && r.status === "CONCLUIDA" && !r.semRecebimentoFisico15d
+        );
+        document.getElementById("ns-auth").classList.add("hidden");
+        if (blocking) {
+          document.getElementById("app-shell").classList.add("hidden");
+          document.getElementById("app-shell").classList.remove("flex");
+          document.getElementById("ns-seller-gate").classList.remove("hidden");
+          document.getElementById("ns-seller-cta").href = getTrackenSellerUrl();
+          return;
+        }
+        document.getElementById("ns-seller-gate").classList.add("hidden");
+        document.getElementById("app-shell").classList.remove("hidden");
+        document.getElementById("app-shell").classList.add("flex");
+        const label = document.getElementById("ns-session-label");
+        if (label) label.textContent = seller.login;
+        nsNavigate("map");
+        setTimeout(() => {
+          updateRadiusStyle();
+          renderList();
+          initMap();
+          if (mapInstance) mapInstance.invalidateSize();
+        }, 50);
+      }
+
+      function nsNavigate(view) {
+        const map = document.getElementById("view-map");
+        const andamento = document.getElementById("view-andamento");
+        const title = document.getElementById("ns-header-title");
+        const navMap = document.getElementById("nav-transportadora");
+        const navAnd = document.getElementById("nav-andamento");
+        const isMap = view !== "andamento";
+        map.classList.toggle("hidden", !isMap);
+        andamento.classList.toggle("hidden", isMap);
+        if (title) title.textContent = isMap ? "Encontre sua transportadora" : "Andamento de solicitações";
+        navMap?.classList.toggle("nav-item-active", isMap);
+        navAnd?.classList.toggle("nav-item-active", !isMap);
+        if (!isMap) renderAndamento();
+        else setTimeout(() => mapInstance && mapInstance.invalidateSize(), 40);
+      }
+
+      function renderAndamento() {
+        const store = loadVinculoStore();
+        const seller = nsLoggedSeller(store);
+        const list = (store.requests || [])
+          .filter((r) => r.sellerId === seller?.sellerId)
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+        const el = document.getElementById("andamento-list");
+        if (!el) return;
+        if (!list.length) {
+          el.innerHTML = `<div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">Nenhuma solicitação ainda. Encontre uma transportadora para enviar.</div>`;
+          return;
+        }
+        el.innerHTML = list
+          .map((req) => {
+            const sla = formatSla(slaRemainingMs(req, store));
+            return `<div class="bg-white rounded-xl border border-gray-200 p-5 mb-3">
+              <div class="flex justify-between gap-3 items-start">
+                <div>
+                  <div class="font-semibold text-gray-900">${escapeVinculoValue(req.carrierName)}</div>
+                  <div class="text-xs text-gray-500 mt-1">${req.requestId} · ${req.origem === "TRANSPORTADORA" ? "via link" : "via TRACKen"}</div>
+                </div>
+                <span class="text-xs font-semibold ${vinculoStatusColorClass(req.status)}">${VINCULO_STATUS_LABEL[req.status] || req.status}</span>
+              </div>
+              ${SLA_STATUSES.includes(req.status) ? `<p class="text-xs text-amber-700 mt-3">Prazo da análise: ${sla} (horário comercial).</p>` : ""}
+              <div class="mt-3 space-y-1 text-xs text-gray-600">${(req.historico || []).slice().reverse().slice(0, 5).map((h) => `<div>${formatDateTimePt(h.at)} — ${escapeVinculoValue(h.action)}</div>`).join("")}</div>
+            </div>`;
+          })
+          .join("");
       }
 
       function getVinculoHubUrl() {
@@ -1150,15 +1507,6 @@
         return `${prefix}-${String(max + 1).padStart(5, "0")}`;
       }
 
-      function findOpenRequest(store, sellerId, carrierId) {
-        return (store.requests || []).find(
-          (r) =>
-            r.sellerId === sellerId &&
-            r.carrierId === carrierId &&
-            r.status !== "RECUSADA"
-        );
-      }
-
       function findLatestRequest(store, sellerId, carrierId) {
         return [...(store.requests || [])]
           .filter((r) => r.sellerId === sellerId && r.carrierId === carrierId)
@@ -1180,6 +1528,8 @@
         switch (status) {
           case "RECUSADA":
             return "text-red-500";
+          case "EXPIRADA":
+            return "text-gray-500";
           case "APROVADA":
           case "CONCLUIDA":
             return "text-emerald-600";
@@ -1227,51 +1577,35 @@
       }
 
       function refreshVinculoSellerUi() {
-        syncSellerAccessState();
         renderList();
+        renderAndamento();
         if (selectedId && markersById[selectedId]) {
           const carrier =
             carriersById[selectedId] ||
             enrichCarrier(CARRIERS.find((c) => c.id === selectedId) || {});
           markersById[selectedId].setPopupContent(popupHtml(carrier));
         }
+        const session = getSession();
+        if (session) {
+          const store = loadVinculoStore();
+          const blocking = sellerBlockingVinculo(store, session.sellerId);
+          if (blocking && blocking.status === "CONCLUIDA") enterNsApp();
+        }
         if (!pendingVinculoCarrierId) return;
         const modal = document.getElementById("vinculo-modal");
         if (!modal || !modal.classList.contains("active")) return;
         const carrier = CARRIERS.find((c) => c.id === pendingVinculoCarrierId);
         const store = loadVinculoStore();
+        const seller = nsLoggedSeller(store);
+        if (!seller) return;
         const req =
-          findOpenRequest(store, store.seller.sellerId, pendingVinculoCarrierId) ||
-          findLatestRequest(store, store.seller.sellerId, pendingVinculoCarrierId);
+          findOpenRequest(store, seller.sellerId, pendingVinculoCarrierId) ||
+          findLatestRequest(store, seller.sellerId, pendingVinculoCarrierId);
         if (carrier && req) renderVinculoModalSuccess(req, carrier);
       }
 
       function getTrackenSellerUrl() {
         return new URL("../painel-seller/", location.href).href;
-      }
-
-      function syncSellerAccessState() {
-        const store = loadVinculoStore();
-        const accessReleased = (store.requests || []).some(
-          (request) =>
-            request.sellerId === store.seller.sellerId &&
-            request.status === "CONCLUIDA"
-        );
-        if (!accessReleased) return false;
-        document.querySelectorAll(".nav-locked").forEach((item) => {
-          item.classList.remove("nav-locked");
-          item.classList.add("hover:bg-gray-100", "transition-colors");
-          item.querySelectorAll(".fa-lock").forEach((icon) => icon.remove());
-          if (item.tagName === "A") {
-            item.href = getTrackenSellerUrl();
-            item.onclick = null;
-          }
-        });
-        const note = document.getElementById("seller-access-note");
-        if (note) {
-          note.innerHTML = `<i class="fa-solid fa-circle-check text-seller-green mr-1"></i> Cadastro aprovado. TRACKen Seller liberado.`;
-        }
-        return true;
       }
 
       function phoneToWa(phone) {
@@ -1299,22 +1633,7 @@
       let pendingVinculoCarrierId = null;
 
       function resetVinculoDemoSeller() {
-        const store = emptyVinculoStore();
-        store.events.push({
-          event: "seller_account_created",
-          at: nowIso(),
-          payload: { sellerId: DEMO_SELLER.sellerId },
-        });
-        saveVinculoStore(store);
-        pendingVinculoCarrierId = null;
-        fecharModalVinculo();
-        renderList();
-        if (selectedId && markersById[selectedId]) {
-          markersById[selectedId].setPopupContent(
-            popupHtml(carriersById[selectedId] || enrichCarrier(CARRIERS.find((c) => c.id === selectedId) || {}))
-          );
-        }
-        showToastSeller("Demonstração restaurada. Solicitações de vínculo foram limpas.");
+        showToastSeller("Use Sair e crie outra conta para recomeçar o protótipo.", "warn");
       }
 
       let mapInstance = null;
@@ -1383,9 +1702,12 @@
         }
       }
 
-      document.getElementById("cep-input").addEventListener("input", function () {
-        formatCepInput(this);
-      });
+      const cepInputEl = document.getElementById("cep-input");
+      if (cepInputEl) {
+        cepInputEl.addEventListener("input", function () {
+          formatCepInput(this);
+        });
+      }
 
       function updateRadiusStyle() {
         const slider = document.getElementById("radius-slider");
@@ -1419,13 +1741,50 @@
         return { ...c, km, mins: estimateMins(km) };
       }
 
+      const FILIAL_PERFIS = [
+        { id: "leve", nome: "Leve" },
+        { id: "medio", nome: "Médio" },
+        { id: "pesado", nome: "Pesado" },
+      ];
+
+      function perfilLabel(id) {
+        return FILIAL_PERFIS.find((p) => p.id === id)?.nome || id;
+      }
+
+      function getSelectedPerfis() {
+        return [...document.querySelectorAll(".perfil-filter button.active")].map(
+          (btn) => btn.getAttribute("data-perfil")
+        );
+      }
+
+      function togglePerfilFiltro(id) {
+        const btn = document.querySelector(`.perfil-filter button[data-perfil="${id}"]`);
+        btn?.classList.toggle("active");
+        renderList();
+      }
+
+      function perfilChipsHtml(c, dark) {
+        const perfis = c.perfis || [];
+        if (!perfis.length) return "";
+        const chips = perfis
+          .map((id) =>
+            dark
+              ? `<span class="perfil-chip">${perfilLabel(id)}</span>`
+              : `<span style="display:inline-flex;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:999px;border:1px solid #74C843;color:#c8f5a8;background:rgba(116,200,67,.15);">${perfilLabel(id)}</span>`
+          )
+          .join("");
+        return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${chips}</div>`;
+      }
+
       function getFilteredCarriers() {
-        const radius = Number(document.getElementById("radius-slider").value);
+        const slider = document.getElementById("radius-slider");
+        const radius = Number(slider?.value || 10);
         const nameQuery = (document.getElementById("name-input").value || "")
           .trim()
           .toLowerCase();
+        const selectedPerfis = getSelectedPerfis();
 
-        if (!hasSearchedCep && !nameQuery) {
+        if (!hasSearchedCep && !nameQuery && !selectedPerfis.length) {
           return { mode: "idle", list: [] };
         }
 
@@ -1436,10 +1795,15 @@
         let list = CARRIERS.map(enrichCarrier);
 
         if (nameQuery) {
-          // Nome tem prioridade: busca global na base de parceiros
           list = list.filter((c) => c.name.toLowerCase().includes(nameQuery));
         } else if (hasSearchedCep && lastCepHadCoverage) {
           list = list.filter((c) => c.km <= radius);
+        }
+
+        if (selectedPerfis.length) {
+          list = list.filter((c) =>
+            selectedPerfis.some((p) => (c.perfis || []).includes(p))
+          );
         }
 
         list.sort((a, b) => a.km - b.km);
@@ -1452,7 +1816,9 @@
 
       function requestChipHtml(carrierId) {
         const store = loadVinculoStore();
-        const req = findLatestRequest(store, store.seller.sellerId, carrierId);
+        const seller = nsLoggedSeller(store);
+        if (!seller) return "";
+        const req = findLatestRequest(store, seller.sellerId, carrierId);
         if (!req) return "";
         const label = VINCULO_STATUS_LABEL[req.status] || req.status;
         const color =
@@ -1473,6 +1839,7 @@
             onclick="selectCarrier('${c.id}')"
           >
             <h4 class="font-semibold text-xs tracking-wide mb-1.5">${c.name}</h4>
+            <p class="text-[10px] text-gray-300 mb-1.5 leading-snug">${c.address}</p>
             <div class="flex items-center gap-3 text-[11px]">
               <span class="meta-accent inline-flex items-center gap-1">
                 <i class="fa-solid fa-left-right text-[10px]"></i>
@@ -1483,6 +1850,7 @@
                 ~${c.mins} min
               </span>
             </div>
+            ${perfilChipsHtml(c, true)}
             ${requestChipHtml(c.id)}
           </div>`;
       }
@@ -1543,37 +1911,19 @@
 
       function popupHtml(c) {
         const store = loadVinculoStore();
-        const req = findOpenRequest(store, store.seller.sellerId, c.id);
+        const seller = nsLoggedSeller(store);
+        const req = seller ? findOpenRequest(store, seller.sellerId, c.id) : null;
         const statusLabel = req
           ? VINCULO_STATUS_LABEL[req.status] || req.status
           : "";
-        const phoneRow = req
-          ? `<a href="${phoneToWa(c.phone)}" target="_blank" rel="noopener" style="display:flex;gap:8px;align-items:center;color:#d1d5db;text-decoration:none;">
-                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
-                <span>${c.phone}</span>
-              </a>`
-          : `<div style="display:flex;gap:8px;align-items:center;">
-                <i class="fa-brands fa-whatsapp" style="color:#74C843;"></i>
-                <span>${c.phone}</span>
-              </div>`;
+        const gate = seller ? canCreateRequest(store, seller.sellerId) : { ok: false };
         const cta = req
-          ? `<button
-                type="button"
-                disabled
-                style="width:100%;background:#374151;color:#e5e7eb;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:default;"
-              >
-                Cadastro solicitado
-              </button>
-              <div style="margin-top:8px;text-align:center;font-size:11px;color:#fbbf24;font-weight:600;">
-                ${statusLabel}
-              </div>`
-          : `<button
-                type="button"
-                onclick="event.stopPropagation();abrirModalVinculo('${c.id}')"
-                style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;"
-              >
-                Solicitar cadastro
-              </button>`;
+          ? `<button type="button" disabled style="width:100%;background:#374151;color:#e5e7eb;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:default;">Cadastro solicitado</button>
+              <div style="margin-top:8px;text-align:center;font-size:11px;color:#fbbf24;font-weight:600;">${statusLabel}</div>`
+          : !gate.ok
+            ? `<button type="button" disabled style="width:100%;background:#374151;color:#e5e7eb;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:default;">Solicitação indisponível</button>
+               <div style="margin-top:8px;text-align:center;font-size:11px;color:#fbbf24;font-weight:600;">Já existe um pedido em andamento ou um vínculo ativo</div>`
+            : `<button type="button" onclick="event.stopPropagation();abrirModalVinculo('${c.id}')" style="width:100%;background:#74C843;color:#fff;font-weight:600;font-size:12px;padding:11px 12px;border:0;border-radius:8px;cursor:pointer;">Solicitar cadastro</button>`;
         return `
           <div class="carrier-popup-wrap" style="width:260px;background:#171E2E;color:#fff;">
             <div style="display:flex;align-items:center;gap:10px;padding:14px 36px 10px 14px;border-bottom:1px solid #2a3347;">
@@ -1587,11 +1937,7 @@
                 <i class="fa-solid fa-location-dot" style="color:#74C843;margin-top:2px;"></i>
                 <span>${c.address}</span>
               </div>
-              ${phoneRow}
-              <div style="display:flex;gap:8px;align-items:center;">
-                <i class="fa-regular fa-envelope" style="color:#74C843;"></i>
-                <span style="word-break:break-all;">${c.email}</span>
-              </div>
+              ${perfilChipsHtml(c, false)}
             </div>
             <div style="padding:0 14px 14px;">
               ${cta}
@@ -1874,17 +2220,24 @@
         const carrier = CARRIERS.find((c) => c.id === carrierId);
         if (!carrier) return;
         const store = loadVinculoStore();
-        const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
+        const seller = nsLoggedSeller(store);
+        if (!seller) return;
+        const existing = findOpenRequest(store, seller.sellerId, carrierId);
         pendingVinculoCarrierId = carrierId;
         if (existing) {
           renderVinculoModalSuccess(existing, carrier);
         } else {
+          const gate = canCreateRequest(store, seller.sellerId);
+          if (!gate.ok) {
+            showToastSeller(gate.reason, "warn");
+            return;
+          }
           trackVinculoEvent("carrier_link_requested", {
-            sellerId: store.seller.sellerId,
+            sellerId: seller.sellerId,
             carrierId: carrier.id,
             carrierCode: carrier.code,
           });
-          renderVinculoModalConfirm(carrier, store.seller);
+          renderVinculoModalConfirm(carrier, seller);
         }
         document.getElementById("vinculo-modal").classList.add("active");
       }
@@ -1925,7 +2278,7 @@
                 <input id="vinculo-edit-email" type="email" required value="${escapeVinculoValue(seller.email)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
               </label>
               <label class="text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
-                WhatsApp
+                Telefone
                 <input id="vinculo-edit-telefone" required value="${escapeVinculoValue(seller.telefone)}" class="mt-1 w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-xs normal-case tracking-normal text-gray-800 focus:outline-none focus:border-seller-green" />
               </label>
               <label class="sm:col-span-2 text-[11px] font-semibold text-gray-600 uppercase tracking-wide">
@@ -1951,8 +2304,10 @@
               <div class="flex justify-between gap-3"><span class="text-gray-500">Nome</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.nome)}</span></div>
               <div class="flex justify-between gap-3"><span class="text-gray-500">Empresa</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.empresa)}</span></div>
               <div class="flex justify-between gap-3"><span class="text-gray-500">CPF/CNPJ</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(documento) || "—"}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">Login</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.login)}</span></div>
               <div class="flex justify-between gap-3"><span class="text-gray-500">E-mail</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.email)}</span></div>
-              <div class="flex justify-between gap-3"><span class="text-gray-500">WhatsApp</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.telefone)}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">Marketplaces</span><span class="font-medium text-gray-800 text-right">${(seller.marketplaces || []).map(marketplaceLabel).join(", ") || "—"}</span></div>
+              <div class="flex justify-between gap-3"><span class="text-gray-500">Telefone</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.telefone)}</span></div>
               <div class="flex justify-between gap-3"><span class="text-gray-500">CEP</span><span class="font-medium text-gray-800 text-right">${escapeVinculoValue(seller.cep)}</span></div>
               <div class="flex justify-between gap-3 pt-2 border-t border-gray-200"><span class="text-gray-500">Transportadora</span><span class="font-semibold text-gray-900 text-right">${escapeVinculoValue(carrier.name)}</span></div>
             </div>
@@ -2052,7 +2407,7 @@
             </button>
             ${req.status === "CONCLUIDA"
               ? `<a href="${getTrackenSellerUrl()}" class="px-4 py-2 bg-seller-green hover:bg-seller-greenDark text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Acessar TRACKen Seller</a>`
-              : `<a href="${phoneToWa(carrier.phone)}" target="_blank" rel="noopener" class="px-4 py-2 bg-[#25D366] hover:bg-[#1ebe5c] text-white rounded-lg font-semibold text-sm text-center inline-flex items-center justify-center"><i class="fa-brands fa-whatsapp mr-2"></i> Falar com a transportadora</a>`}
+              : `<button type="button" onclick="nsNavigate('andamento');fecharModalVinculo()" class="px-4 py-2 bg-seller-green hover:bg-seller-greenDark text-white rounded-lg font-semibold text-sm">Ver andamento</button>`}
           </div>
         `;
       }
@@ -2061,15 +2416,22 @@
         const carrier = CARRIERS.find((c) => c.id === carrierId);
         if (!carrier) return;
         const store = loadVinculoStore();
-        const existing = findOpenRequest(store, store.seller.sellerId, carrierId);
+        const seller = nsLoggedSeller(store) || store.seller;
+        if (!seller) return;
+        const existing = findOpenRequest(store, seller.sellerId, carrierId);
         if (existing) {
           renderVinculoModalSuccess(existing, carrier);
+          return;
+        }
+        const gate = canCreateRequest(store, seller.sellerId);
+        if (!gate.ok) {
+          showToastSeller(gate.reason, "warn");
           return;
         }
         const createdAt = nowIso();
         const request = {
           requestId: nextVinculoId("SOL", store.requests, "requestId", 10428),
-          sellerId: store.seller.sellerId,
+          sellerId: seller.sellerId,
           carrierId: carrier.id,
           carrierCode: carrier.code,
           carrierName: carrier.name,
@@ -2078,16 +2440,19 @@
           status: "AGUARDANDO_ANALISE",
           createdAt,
           updatedAt: createdAt,
+          slaNotices: [],
           sellerSnapshot: {
-            nome: store.seller.nome,
-            empresa: store.seller.empresa,
-            documento: store.seller.documento || store.seller.cnpj,
-            cnpj: store.seller.cnpj,
-            email: store.seller.email,
-            telefone: store.seller.telefone,
-            cep: store.seller.cep,
-            marketplaces: store.seller.marketplaces || [],
+            nome: seller.nome,
+            empresa: seller.empresa,
+            documento: seller.documento || seller.cnpj,
+            cnpj: seller.cnpj,
+            login: seller.login,
+            email: seller.email,
+            telefone: seller.telefone,
+            cep: seller.cep,
+            marketplaces: seller.marketplaces || [],
           },
+          marketplaces: seller.marketplaces || [],
           carrierCustomerId: null,
           carrierLoginId: null,
           sellerReturnUrl: getSellerReturnUrl(),
@@ -2095,12 +2460,13 @@
           historico: [
             {
               at: createdAt,
-              action: "Solicitação de cadastro enviada pelo Seller",
+              action: "Solicitação de cadastro enviada pelo New Seller",
               type: "seller",
             },
           ],
         };
         store.requests.push(request);
+        maybeSlaNotices(store);
         store.events.push({
           event: "carrier_link_request_submitted",
           at: createdAt,
@@ -2114,15 +2480,14 @@
         saveVinculoStore(store);
         renderVinculoModalSuccess(request, carrier);
         renderList();
+        renderAndamento();
         const marker = markersById[carrier.id];
         if (marker) marker.setPopupContent(popupHtml(enrichCarrier(carrier)));
         const opsUrl = operacionalImportUrl(request);
         if (opsUrl) {
-          showToastSeller("Solicitação enviada. Abrindo o operacional.");
-          window.location.assign(opsUrl);
-        } else {
-          showToastSeller("Solicitação de cadastro enviada com sucesso.");
+          document.getElementById("ops-sync-frame").src = opsUrl;
         }
+        showToastSeller("Solicitação enviada. Acompanhe em Andamento e no e-mail do cadastro.");
       }
 
       // ============================================================
@@ -2212,6 +2577,7 @@
         document.getElementById("name-input").value = "";
         document.getElementById("radius-slider").value = 10;
         updateRadiusStyle();
+        document.querySelectorAll(".perfil-filter button").forEach((btn) => btn.classList.remove("active"));
         hasSearchedCep = false;
         lastCepHadCoverage = true;
         selectedId = null;
@@ -2234,26 +2600,8 @@
       // INIT
       // ============================================================
       window.onload = function () {
-        const solo = new URLSearchParams(location.search).get("solo");
-        if (solo === "vinculo") {
-          document.body.classList.add("solo-mode");
-          const bar = document.createElement("div");
-          bar.id = "solo-bar";
-          bar.className =
-            "h-12 bg-[#121826] border-b border-gray-800 px-4 lg:px-6 flex items-center justify-between shrink-0 z-30";
-          bar.innerHTML = `
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="font-bold text-white">TRACK<span class="text-seller-green">en</span></span>
-              <span class="text-gray-600">|</span>
-              <span class="text-sm font-medium text-gray-200 truncate">Encontrar transportadora</span>
-            </div>
-            <a href="${location.pathname}" class="text-xs text-gray-400 hover:text-white whitespace-nowrap">Abrir painel completo</a>
-          `;
-          const host = document.querySelector(".flex-1.flex.flex-col");
-          if (host) host.insertBefore(bar, host.firstChild);
-        }
+        nsFillMarketplaces();
         loadVinculoStore();
-        syncSellerAccessState();
         consumeVinculoStatusFromUrl();
         window.addEventListener("message", (event) => {
           const data = event.data;
@@ -2264,15 +2612,10 @@
           if (event.key !== VINCULO_STORE_KEY) return;
           refreshVinculoSellerUi();
         });
-        trackVinculoEvent("carrier_search_viewed", {
-          sellerId: DEMO_SELLER.sellerId,
-        });
-        updateRadiusStyle();
-        renderList();
-        initMap();
         window.addEventListener("resize", () => {
           if (mapInstance) mapInstance.invalidateSize();
         });
+        if (getSession()) enterNsApp();
       };
     </script>
   </body>
