@@ -1520,7 +1520,7 @@
               <div class="flex justify-between gap-3 items-start">
                 <div>
                   <div class="font-semibold text-gray-900">${escapeVinculoValue(req.carrierName)}</div>
-                  <div class="text-xs text-gray-500 mt-1">${req.requestId} · ${req.origem === "TRANSPORTADORA" ? "via link" : "via TRACKen"}</div>
+                  <div class="text-xs text-gray-500 mt-1">${req.requestId} · ${req.origem === "TRANSPORTADORA" ? "Transportadora" : "TRACKen"}</div>
                 </div>
                 <span class="text-xs font-semibold ${vinculoStatusColorClass(req.status)}">${VINCULO_STATUS_LABEL[req.status] || req.status}</span>
               </div>
